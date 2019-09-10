@@ -5,15 +5,15 @@ let viz_width = width;
 let height = window.innerHeight;
 
 let fov = 40;
-let near = 10;
-let far = 7000;
+let near = 2;
+let far = 400;
 
 // Set up camera and scene
 let camera = new THREE.PerspectiveCamera(
     fov,
     width / height,
     near,
-    far
+    far + 1
 );
 
 window.addEventListener('resize', () => {
