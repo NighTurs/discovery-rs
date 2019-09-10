@@ -121,6 +121,7 @@ d3.csv('data/ds.csv', function (d) {
         sizeAttenuation: false,
         vertexColors: THREE.VertexColors,
         map: circle_sprite,
+        opacity: 0.4,
         transparent: true
     });
 
