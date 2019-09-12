@@ -1,7 +1,11 @@
 const pointsSizeInp = document.querySelector('#points-size');
 const pointsSizeVal = document.querySelector('#points-size-value');
 
+const pointsOpacityInp = document.querySelector('#points-opacity');
+const pointsOpacityVal = document.querySelector('#points-opacity-value');
+
 const initPointsSize = 3
+const initPointsOpacity = 1.0
 
 let toolbarWidth = document.querySelector('#toolbar').clientWidth
 
@@ -153,6 +157,15 @@ d3.csv('data/ds.csv', function (d) {
 
     pointsSizeInputHandler(initPointsSize)
     pointsSizeInp.addEventListener('input', event => pointsSizeInputHandler(+event.target.value));
+
+    function pointsOpacityInputHandler(newVal) {
+        pointsOpacityInp.value = newVal;
+        pointsOpacityVal.innerHTML = newVal;
+        points.material.opacity = newVal;
+    }
+
+    pointsOpacityInputHandler(initPointsOpacity)
+    pointsOpacityInp.addEventListener('input', event => pointsOpacityInputHandler(+event.target.value));
 
     // Hover and tooltip interaction
 
