@@ -1,5 +1,3 @@
-let point_num = 100000;
-
 let width = window.innerWidth;
 let viz_width = width;
 let height = window.innerHeight;
@@ -25,19 +23,6 @@ window.addEventListener('resize', () => {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 })
-
-let color_array = [
-    "#1f78b4",
-    "#b2df8a",
-    "#33a02c",
-    "#fb9a99",
-    "#e31a1c",
-    "#fdbf6f",
-    "#ff7f00",
-    "#6a3d9a",
-    "#cab2d6",
-    "#ffff99"
-]
 
 // Add canvas
 let renderer = new THREE.WebGLRenderer();
@@ -99,29 +84,44 @@ d3.csv('data/ds.csv', function (d) {
         idx: +d.idx,
         position: [+d.x, +d.y],
         name: d.name,
-        group: Math.floor(Math.random() * 6),
         listeners: +d.listeners,
         tags: d.tags
     }
 }).then(function (generated_points) {
+    let maxListeners = 0
+    let minListeners = generated_points[0].listeners
+    
+    for (let dat of generated_points) {
+        if (maxListeners < dat.listeners) {
+            maxListeners = dat.listeners
+        }
+        if (minListeners > dat.listeners) {
+            minListeners = dat.listeners
+        }
+    }
+
     let pointsGeometry = new THREE.Geometry();
+
+    function colorFromListeners(v) {
+        return d3.interpolateOranges(1 - Math.log2(v - minListeners + 1) / Math.log2(maxListeners - minListeners + 1))
+    }
 
     let colors = [];
     for (let datum of generated_points) {
         // Set vector coordinates from data
         let vertex = new THREE.Vector3(datum.position[0], datum.position[1], 0);
         pointsGeometry.vertices.push(vertex);
-        let color = new THREE.Color(color_array[datum.group]);
+        let color = new THREE.Color(colorFromListeners(datum.listeners));
         colors.push(color);
     }
     pointsGeometry.colors = colors;
 
     let pointsMaterial = new THREE.PointsMaterial({
-        size: 8,
+        size: 3,
         sizeAttenuation: false,
         vertexColors: THREE.VertexColors,
         map: circle_sprite,
-        opacity: 0.4,
+        opacity: 1,
         transparent: true
     });
 
@@ -129,7 +129,7 @@ d3.csv('data/ds.csv', function (d) {
 
     let scene = new THREE.Scene();
     scene.add(points);
-    scene.background = new THREE.Color(0xefefef);
+    scene.background = new THREE.Color(0x0000000);
 
     // Three.js render loop
     function animate() {
@@ -192,7 +192,7 @@ d3.csv('data/ds.csv', function (d) {
                 0
             )
         );
-        geometry.colors = [new THREE.Color(color_array[datum.group])];
+        geometry.colors = [new THREE.Color(colorFromListeners(datum.listeners))];
 
         let material = new THREE.PointsMaterial({
             size: 26,
@@ -232,8 +232,8 @@ d3.csv('data/ds.csv', function (d) {
         $tooltip.style.left = tooltip_state.left + 'px';
         $tooltip.style.top = tooltip_state.top + 'px';
         $point_tip.innerText = tooltip_state.name;
-        $point_tip.style.background = color_array[tooltip_state.group];
-        $group_tip.innerText = `Group ${tooltip_state.group}`;
+        $point_tip.style.background = colorFromListeners(tooltip_state.listeners);
+        $group_tip.innerText = `Listeners ${tooltip_state.listeners}`;
     }
 
     function showTooltip(mouse_position, datum) {
@@ -244,7 +244,7 @@ d3.csv('data/ds.csv', function (d) {
         tooltip_state.left = mouse_position[0] + x_offset;
         tooltip_state.top = mouse_position[1] + y_offset;
         tooltip_state.name = datum.name;
-        tooltip_state.group = datum.group;
+        tooltip_state.listeners = datum.listeners;
         updateTooltip();
     }
 
