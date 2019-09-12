@@ -220,12 +220,14 @@ d3.csv('data/ds.csv', function (d) {
     let tooltip_template = document.createRange().createContextualFragment(`<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 120px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;">
   <div id="point_tip" style="padding: 4px; margin-bottom: 4px;"></div>
   <div id="group_tip" style="padding: 4px;"></div>
+  <div id="tags_tip" style="padding: 4px;"></div>
 </div>`);
     document.body.append(tooltip_template);
 
     let $tooltip = document.querySelector('#tooltip');
     let $point_tip = document.querySelector('#point_tip');
     let $group_tip = document.querySelector('#group_tip');
+    let $tags_tip = document.querySelector('#tags_tip');
 
     function updateTooltip() {
         $tooltip.style.display = tooltip_state.display;
@@ -234,6 +236,7 @@ d3.csv('data/ds.csv', function (d) {
         $point_tip.innerText = tooltip_state.name;
         $point_tip.style.background = colorFromListeners(tooltip_state.listeners);
         $group_tip.innerText = `Listeners ${tooltip_state.listeners}`;
+        $tags_tip.innerText = `Tags ${tooltip_state.tags}`;
     }
 
     function showTooltip(mouse_position, datum) {
@@ -245,6 +248,7 @@ d3.csv('data/ds.csv', function (d) {
         tooltip_state.top = mouse_position[1] + y_offset;
         tooltip_state.name = datum.name;
         tooltip_state.listeners = datum.listeners;
+        tooltip_state.tags = datum.tags;
         updateTooltip();
     }
 
