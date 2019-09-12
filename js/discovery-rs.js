@@ -1,3 +1,8 @@
+const pointsSizeInp = document.querySelector('#points-size');
+const pointsSizeVal = document.querySelector('#points-size-value');
+
+const initPointsSize = 3
+
 let toolbarWidth = document.querySelector('#toolbar').clientWidth
 
 let width = window.innerWidth - toolbarWidth;
@@ -119,7 +124,7 @@ d3.csv('data/ds.csv', function (d) {
     pointsGeometry.colors = colors;
 
     let pointsMaterial = new THREE.PointsMaterial({
-        size: 3,
+        size: initPointsSize,
         sizeAttenuation: false,
         vertexColors: THREE.VertexColors,
         map: circle_sprite,
@@ -139,6 +144,15 @@ d3.csv('data/ds.csv', function (d) {
         renderer.render(scene, camera);
     }
     animate();
+
+    function pointsSizeInputHandler(newVal) {
+        pointsSizeInp.value = newVal;
+        pointsSizeVal.innerHTML = newVal;
+        points.material.size = newVal;
+    }
+
+    pointsSizeInputHandler(initPointsSize)
+    pointsSizeInp.addEventListener('input', event => pointsSizeInputHandler(+event.target.value));
 
     // Hover and tooltip interaction
 
