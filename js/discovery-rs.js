@@ -4,6 +4,8 @@ const pointsSizeVal = document.querySelector('#points-size-value');
 const pointsOpacityInp = document.querySelector('#points-opacity');
 const pointsOpacityVal = document.querySelector('#points-opacity-value');
 
+const searchInp = document.querySelector('#search');
+
 const initPointsSize = 3
 const initPointsOpacity = 1.0
 
@@ -90,6 +92,11 @@ function toRadians(angle) {
     return angle * (Math.PI / 180);
 }
 
+let index = null;
+d3.json('data/ds_index.json').then(function(d) {
+    index = elasticlunr.Index.load(d);
+});
+
 d3.csv('data/ds.csv', function (d) {
     return {
         idx: +d.idx,
@@ -166,6 +173,48 @@ d3.csv('data/ds.csv', function (d) {
 
     pointsOpacityInputHandler(initPointsOpacity)
     pointsOpacityInp.addEventListener('input', event => pointsOpacityInputHandler(+event.target.value));
+
+    searchContainer = new THREE.Object3D()
+    scene.add(searchContainer);
+
+    function searchInputHandler(newVal) {
+        if (newVal) {
+            searchContainer.remove(...searchContainer.children);
+            found = index.search(newVal);
+            if (found.length > 0) {
+                pointsOpacityInputHandler(0.0);
+                let geometry = new THREE.Geometry();
+                let colors = [];
+                for (let datum of found) {
+                    let item = generated_points[+datum.ref];
+                    geometry.vertices.push(
+                        new THREE.Vector3(
+                            item.position[0],
+                            item.position[1],
+                            0
+                        )
+                    );
+                    colors.push(new THREE.Color(colorFromListeners(item.listeners)))
+                }
+                geometry.colors = colors;
+        
+                let material = new THREE.PointsMaterial({
+                    size: pointsSizeInp.value,
+                    sizeAttenuation: false,
+                    vertexColors: THREE.VertexColors,
+                    map: circle_sprite,
+                    transparent: true
+                });
+        
+                let point = new THREE.Points(geometry, material);
+                searchContainer.add(point);
+            }
+        } else {
+            searchContainer.remove(...searchContainer.children);
+        }
+    }
+
+    searchInp.addEventListener('input', event => searchInputHandler(event.target.value));
 
     // Hover and tooltip interaction
 

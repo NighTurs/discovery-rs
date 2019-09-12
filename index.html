@@ -7,6 +7,7 @@
     <script src='js/d3.min.js'></script>
     <script src='js/three.min.js'></script>
     <script src='js/lodash.js'></script>
+    <script src='js/elasticlunr.min.js'></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discovery Recommender System</title>
@@ -27,6 +28,12 @@
                 <span id="points-opacity-value" class="value">1</span>
             </div>
             <input id="points-opacity" type="range" min="0.05" max="1" step="0.05" value="1">
+        </label>
+        <label class="flex-c flex-v">
+            <div class="flex-a-c no-select">
+                <span class="label">Search</span>
+            </div>
+            <input id="search" type="text">
         </label>
     </div>
     <script src='js/discovery-rs.js'></script>
