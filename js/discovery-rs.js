@@ -6,9 +6,12 @@ const pointsOpacityVal = document.querySelector('#points-opacity-value');
 
 const searchInp = document.querySelector('#search');
 const searchHideOthersInp = document.querySelector('#hide-others');
+const searchColorFindingsInp = document.querySelector('#color-findings');
 
 const initPointsSize = 3
 const initPointsOpacity = 1.0
+
+const findingsColor = '#28aefc'
 
 let toolbarWidth = document.querySelector('#toolbar').clientWidth
 
@@ -125,6 +128,14 @@ d3.csv('data/ds.csv', function (d) {
         return d3.interpolateOranges(1 - Math.log2(v - minListeners + 1) / Math.log2(maxListeners - minListeners + 1))
     }
 
+    function getColor(point, fromFilter) {
+        if (fromFilter && searchColorFindingsInp.checked) {
+            return findingsColor;
+        } else {
+            return colorFromListeners(point.listeners);
+        }
+    }
+
     let colors = [];
     let idxs = [];
     let idx = 0;
@@ -132,7 +143,7 @@ d3.csv('data/ds.csv', function (d) {
         // Set vector coordinates from data
         let vertex = new THREE.Vector3(datum.position[0], datum.position[1], 0);
         pointsGeometry.vertices.push(vertex);
-        let color = new THREE.Color(colorFromListeners(datum.listeners));
+        let color = new THREE.Color(getColor(datum, false));
         colors.push(color);
         idxs.push(idx++);
     }
@@ -218,7 +229,7 @@ d3.csv('data/ds.csv', function (d) {
                             0
                         )
                     );
-                    colors.push(new THREE.Color(colorFromListeners(item.listeners)))
+                    colors.push(new THREE.Color(getColor(item, true)))
                 }
                 geometry.colors = colors;
         
@@ -244,6 +255,22 @@ d3.csv('data/ds.csv', function (d) {
 
     searchInp.addEventListener('input', event => searchInputHandler(event.target.value));
 
+    function colorFilterResults() {
+        if (filterContainer.children.length == 0) {
+            return;
+        }
+        let pointsObj = filterContainer.children[0];
+
+        for (let i = 0; i < pointsObj.idxs.length; i++) {
+            let idx = pointsObj.idxs[i];
+            let color = getColor(generated_points[idx], true);
+            pointsObj.geometry.colors[i] = new THREE.Color(color);
+        }
+        pointsObj.geometry.colorsNeedUpdate = true;
+    }
+
+    searchColorFindingsInp.addEventListener('input', event => colorFilterResults());
+
     // Hover and tooltip interaction
 
     raycaster = new THREE.Raycaster();
@@ -267,10 +294,12 @@ d3.csv('data/ds.csv', function (d) {
         let mouse_vector = mouseToThree(...mouse_position);
         raycaster.setFromCamera(mouse_vector, camera);
         let pointsObj = null;
+        let fromFilter = false;
         if (points.visible == true) {
             pointsObj = points;
         } else {
             pointsObj = filterContainer.children[0];
+            fromFilter = true;
         }
         let intersects = raycaster.intersectObject(pointsObj);
         
@@ -279,8 +308,8 @@ d3.csv('data/ds.csv', function (d) {
             let intersect = sorted_intersects[0];
             let index = pointsObj.idxs[intersect.index];
             let datum = generated_points[index];
-            highlightPoint(datum);
-            showTooltip(mouse_position, datum);
+            highlightPoint(datum, fromFilter);
+            showTooltip(mouse_position, datum, fromFilter);
         } else {
             removeHighlights();
             hideTooltip();
@@ -294,7 +323,7 @@ d3.csv('data/ds.csv', function (d) {
     hoverContainer = new THREE.Object3D()
     scene.add(hoverContainer);
 
-    function highlightPoint(datum) {
+    function highlightPoint(datum, fromFilter) {
         removeHighlights();
 
         let geometry = new THREE.Geometry();
@@ -305,7 +334,7 @@ d3.csv('data/ds.csv', function (d) {
                 0
             )
         );
-        geometry.colors = [new THREE.Color(colorFromListeners(datum.listeners))];
+        geometry.colors = [new THREE.Color(getColor(datum, fromFilter))];
 
         let material = new THREE.PointsMaterial({
             size: 26,
@@ -328,7 +357,7 @@ d3.csv('data/ds.csv', function (d) {
     });
 
     // Initial tooltip state
-    let tooltip_state = { display: "none" }
+    let tooltip_state = { display: "none", data: {}}
 
     let tooltip_template = document.createRange().createContextualFragment(`<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 120px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;">
   <div id="point_tip" style="padding: 4px; margin-bottom: 4px;"></div>
@@ -346,22 +375,21 @@ d3.csv('data/ds.csv', function (d) {
         $tooltip.style.display = tooltip_state.display;
         $tooltip.style.left = tooltip_state.left + 'px';
         $tooltip.style.top = tooltip_state.top + 'px';
-        $point_tip.innerText = tooltip_state.name;
-        $point_tip.style.background = colorFromListeners(tooltip_state.listeners);
-        $group_tip.innerText = `Listeners ${tooltip_state.listeners}`;
-        $tags_tip.innerText = `Tags ${tooltip_state.tags}`;
+        $point_tip.innerText = tooltip_state.data.name;
+        $point_tip.style.background = getColor(tooltip_state.data, tooltip_state.fromFilter);
+        $group_tip.innerText = `Listeners ${tooltip_state.data.listeners}`;
+        $tags_tip.innerText = `Tags ${tooltip_state.data.tags}`;
     }
 
-    function showTooltip(mouse_position, datum) {
+    function showTooltip(mouse_position, datum, fromFilter) {
         let tooltip_width = 120;
         let x_offset = -tooltip_width / 2;
         let y_offset = 30;
         tooltip_state.display = "block";
         tooltip_state.left = mouse_position[0] + x_offset;
         tooltip_state.top = mouse_position[1] + y_offset;
-        tooltip_state.name = datum.name;
-        tooltip_state.listeners = datum.listeners;
-        tooltip_state.tags = datum.tags;
+        tooltip_state.data = datum;
+        tooltip_state.fromFilter = fromFilter;
         updateTooltip();
     }
 
