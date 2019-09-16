@@ -5,6 +5,7 @@ const pointsOpacityInp = document.querySelector('#points-opacity');
 const pointsOpacityVal = document.querySelector('#points-opacity-value');
 
 const searchInp = document.querySelector('#search');
+const searchHideOthersInp = document.querySelector('#hide-others');
 
 const initPointsSize = 3
 const initPointsOpacity = 1.0
@@ -125,12 +126,15 @@ d3.csv('data/ds.csv', function (d) {
     }
 
     let colors = [];
+    let idxs = [];
+    let idx = 0;
     for (let datum of generated_points) {
         // Set vector coordinates from data
         let vertex = new THREE.Vector3(datum.position[0], datum.position[1], 0);
         pointsGeometry.vertices.push(vertex);
         let color = new THREE.Color(colorFromListeners(datum.listeners));
         colors.push(color);
+        idxs.push(idx++);
     }
     pointsGeometry.colors = colors;
 
@@ -144,10 +148,14 @@ d3.csv('data/ds.csv', function (d) {
     });
 
     let points = new THREE.Points(pointsGeometry, pointsMaterial);
+    points.idxs = idxs;
 
     let scene = new THREE.Scene();
     scene.add(points);
     scene.background = new THREE.Color(0x0000000);
+
+    filterContainer = new THREE.Object3D()
+    scene.add(filterContainer);
 
     // Three.js render loop
     function animate() {
@@ -160,6 +168,9 @@ d3.csv('data/ds.csv', function (d) {
         pointsSizeInp.value = newVal;
         pointsSizeVal.innerHTML = newVal;
         points.material.size = newVal;
+        if (filterContainer.children.length > 0) {
+            filterContainer.children[0].material.size = newVal;
+        }
     }
 
     pointsSizeInputHandler(initPointsSize)
@@ -169,24 +180,37 @@ d3.csv('data/ds.csv', function (d) {
         pointsOpacityInp.value = newVal;
         pointsOpacityVal.innerHTML = newVal;
         points.material.opacity = newVal;
+        if (filterContainer.children.length > 0) {
+            filterContainer.children[0].material.opacity = newVal;
+        }
     }
 
     pointsOpacityInputHandler(initPointsOpacity)
     pointsOpacityInp.addEventListener('input', event => pointsOpacityInputHandler(+event.target.value));
 
-    searchContainer = new THREE.Object3D()
-    scene.add(searchContainer);
+    function switchHideOthers(newVal) {
+        points.visible = !newVal;
+        searchHideOthersInp.checked = newVal;
+    }
+
+    function searchHideOthersInputHandler() {
+        switchHideOthers(searchHideOthersInp.checked);
+    }
+
+    searchHideOthersInp.addEventListener('input', event => searchHideOthersInputHandler());
 
     function searchInputHandler(newVal) {
         if (newVal) {
-            searchContainer.remove(...searchContainer.children);
+            filterContainer.remove(...filterContainer.children);
             found = index.search(newVal);
             if (found.length > 0) {
-                pointsOpacityInputHandler(0.0);
                 let geometry = new THREE.Geometry();
                 let colors = [];
+                let idxs = [];
                 for (let datum of found) {
-                    let item = generated_points[+datum.ref];
+                    let idx = +datum.ref;
+                    let item = generated_points[idx];
+                    idxs.push(idx);
                     geometry.vertices.push(
                         new THREE.Vector3(
                             item.position[0],
@@ -203,14 +227,18 @@ d3.csv('data/ds.csv', function (d) {
                     sizeAttenuation: false,
                     vertexColors: THREE.VertexColors,
                     map: circle_sprite,
+                    opacity: pointsOpacityInp.value,
                     transparent: true
                 });
         
-                let point = new THREE.Points(geometry, material);
-                searchContainer.add(point);
+                let pointsObj = new THREE.Points(geometry, material);
+                pointsObj.idxs = idxs;
+                filterContainer.add(pointsObj);
+                switchHideOthers(true);
             }
         } else {
-            searchContainer.remove(...searchContainer.children);
+            switchHideOthers(false);
+            filterContainer.remove(...filterContainer.children);
         }
     }
 
@@ -238,11 +266,18 @@ d3.csv('data/ds.csv', function (d) {
     function checkIntersects(mouse_position) {
         let mouse_vector = mouseToThree(...mouse_position);
         raycaster.setFromCamera(mouse_vector, camera);
-        let intersects = raycaster.intersectObject(points);
+        let pointsObj = null;
+        if (points.visible == true) {
+            pointsObj = points;
+        } else {
+            pointsObj = filterContainer.children[0];
+        }
+        let intersects = raycaster.intersectObject(pointsObj);
+        
         if (intersects[0]) {
             let sorted_intersects = sortIntersectsByDistanceToRay(intersects);
             let intersect = sorted_intersects[0];
-            let index = intersect.index;
+            let index = pointsObj.idxs[intersect.index];
             let datum = generated_points[index];
             highlightPoint(datum);
             showTooltip(mouse_position, datum);
