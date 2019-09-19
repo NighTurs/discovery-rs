@@ -8,6 +8,8 @@ const searchInp = document.querySelector('#search');
 const searchHideOthersInp = document.querySelector('#hide-others');
 const searchColorFindingsInp = document.querySelector('#color-findings');
 
+const searchFieldInp = document.querySelector('#search-field');
+
 const initPointsSize = 3
 const initPointsOpacity = 1.0
 
@@ -97,8 +99,14 @@ function toRadians(angle) {
 }
 
 let index = null;
-d3.json('data/ds_index.json').then(function(d) {
+d3.json('data/ds_index.json').then(function (d) {
     index = elasticlunr.Index.load(d);
+    for (let field of index.getFields()) {
+        var opt = document.createElement('option');
+        opt.value = field;
+        opt.innerHTML = field;
+        searchFieldInp.appendChild(opt);
+    }
 });
 
 d3.csv('data/ds.csv', function (d) {
@@ -112,7 +120,7 @@ d3.csv('data/ds.csv', function (d) {
 }).then(function (generated_points) {
     let maxListeners = 0
     let minListeners = generated_points[0].listeners
-    
+
     for (let dat of generated_points) {
         if (maxListeners < dat.listeners) {
             maxListeners = dat.listeners
@@ -210,10 +218,14 @@ d3.csv('data/ds.csv', function (d) {
 
     searchHideOthersInp.addEventListener('input', event => searchHideOthersInputHandler());
 
-    function searchInputHandler(newVal) {
+    function searchInputHandler() {
+        newVal = searchInp.value;
         if (newVal) {
             filterContainer.remove(...filterContainer.children);
-            found = index.search(newVal);
+            searchOpt = { fields: {} }
+            searchOpt.fields[searchFieldInp.value] = { bool: "AND" }
+            console.log(searchOpt);
+            found = index.search(newVal, searchOpt);
             if (found.length > 0) {
                 let geometry = new THREE.Geometry();
                 let colors = [];
@@ -232,7 +244,7 @@ d3.csv('data/ds.csv', function (d) {
                     colors.push(new THREE.Color(getColor(item, true)))
                 }
                 geometry.colors = colors;
-        
+
                 let material = new THREE.PointsMaterial({
                     size: pointsSizeInp.value,
                     sizeAttenuation: false,
@@ -241,7 +253,7 @@ d3.csv('data/ds.csv', function (d) {
                     opacity: pointsOpacityInp.value,
                     transparent: true
                 });
-        
+
                 let pointsObj = new THREE.Points(geometry, material);
                 pointsObj.idxs = idxs;
                 filterContainer.add(pointsObj);
@@ -253,7 +265,8 @@ d3.csv('data/ds.csv', function (d) {
         }
     }
 
-    searchInp.addEventListener('input', event => searchInputHandler(event.target.value));
+    searchInp.addEventListener('input', event => searchInputHandler());
+    searchFieldInp.addEventListener('input', event => searchInputHandler());
 
     function colorFilterResults() {
         if (filterContainer.children.length == 0) {
@@ -302,7 +315,7 @@ d3.csv('data/ds.csv', function (d) {
             fromFilter = true;
         }
         let intersects = raycaster.intersectObject(pointsObj);
-        
+
         if (intersects[0]) {
             let sorted_intersects = sortIntersectsByDistanceToRay(intersects);
             let intersect = sorted_intersects[0];
@@ -357,7 +370,7 @@ d3.csv('data/ds.csv', function (d) {
     });
 
     // Initial tooltip state
-    let tooltip_state = { display: "none", data: {}}
+    let tooltip_state = { display: "none", data: {} }
 
     let tooltip_template = document.createRange().createContextualFragment(`<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 120px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;">
   <div id="point_tip" style="padding: 4px; margin-bottom: 4px;"></div>
