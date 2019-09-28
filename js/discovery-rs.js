@@ -110,37 +110,28 @@ d3.json('data/ds_index.json').then(function (d) {
 });
 
 d3.csv('data/ds.csv', function (d) {
-    return {
-        idx: +d.idx,
-        position: [+d.x, +d.y],
-        name: d.name,
-        listeners: +d.listeners,
-        tags: d.tags
+    d.idx = +d.idx;
+    d.position = [+d.x, +d.y];
+    delete d.x;
+    delete d.y;
+    for (field in d) {
+        if (field.startsWith('n_')) {
+            d[field] = +d[field];
+        }
     }
+    return d;
 }).then(function (generated_points) {
-    let maxListeners = 0
-    let minListeners = generated_points[0].listeners
-
-    for (let dat of generated_points) {
-        if (maxListeners < dat.listeners) {
-            maxListeners = dat.listeners
-        }
-        if (minListeners > dat.listeners) {
-            minListeners = dat.listeners
-        }
-    }
-
     let pointsGeometry = new THREE.Geometry();
 
     function colorFromListeners(v) {
-        return d3.interpolateOranges(1 - Math.log2(v - minListeners + 1) / Math.log2(maxListeners - minListeners + 1))
+        return d3.interpolateOranges(1 - v)
     }
 
     function getColor(point, fromFilter) {
         if (fromFilter && searchColorFindingsInp.checked) {
             return findingsColor;
         } else {
-            return colorFromListeners(point.listeners);
+            return colorFromListeners(point.n_pct_listeners);
         }
     }
 
@@ -372,26 +363,21 @@ d3.csv('data/ds.csv', function (d) {
     // Initial tooltip state
     let tooltip_state = { display: "none", data: {} }
 
-    let tooltip_template = document.createRange().createContextualFragment(`<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 120px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;">
-  <div id="point_tip" style="padding: 4px; margin-bottom: 4px;"></div>
-  <div id="group_tip" style="padding: 4px;"></div>
-  <div id="tags_tip" style="padding: 4px;"></div>
-</div>`);
+    let tooltip_template = document.createRange().createContextualFragment(`<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 150px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;"/>`);
     document.body.append(tooltip_template);
 
     let $tooltip = document.querySelector('#tooltip');
-    let $point_tip = document.querySelector('#point_tip');
-    let $group_tip = document.querySelector('#group_tip');
-    let $tags_tip = document.querySelector('#tags_tip');
 
     function updateTooltip() {
         $tooltip.style.display = tooltip_state.display;
+        while ($tooltip.firstChild) {
+            $tooltip.removeChild($tooltip.firstChild);
+        }
+        for (field in tooltip_state.data) {
+            $tooltip.innerHTML += `<div id="point_tip" style="padding: 4px;">${field}: ${tooltip_state.data[field]}</div>`;
+        }
         $tooltip.style.left = tooltip_state.left + 'px';
         $tooltip.style.top = tooltip_state.top + 'px';
-        $point_tip.innerText = tooltip_state.data.name;
-        $point_tip.style.background = getColor(tooltip_state.data, tooltip_state.fromFilter);
-        $group_tip.innerText = `Listeners ${tooltip_state.data.listeners}`;
-        $tags_tip.innerText = `Tags ${tooltip_state.data.tags}`;
     }
 
     function showTooltip(mouse_position, datum, fromFilter) {
