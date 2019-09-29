@@ -9,6 +9,7 @@ const searchHideOthersInp = document.querySelector('#hide-others');
 const searchColorFindingsInp = document.querySelector('#color-findings');
 
 const searchFieldInp = document.querySelector('#search-field');
+const colorFieldInp = document.querySelector('#color-field');
 
 const initPointsSize = 3
 const initPointsOpacity = 1.0
@@ -121,9 +122,18 @@ d3.csv('data/ds.csv', function (d) {
     }
     return d;
 }).then(function (generated_points) {
+    for (field in generated_points[0]) {
+        if (field.startsWith('n_')) {
+            var opt = document.createElement('option');
+            opt.value = field;
+            opt.innerHTML = field;
+            colorFieldInp.appendChild(opt);
+        }
+    }
+
     let pointsGeometry = new THREE.Geometry();
 
-    function colorFromListeners(v) {
+    function colorFromPct(v) {
         return d3.interpolateOranges(1 - v)
     }
 
@@ -131,7 +141,7 @@ d3.csv('data/ds.csv', function (d) {
         if (fromFilter && searchColorFindingsInp.checked) {
             return findingsColor;
         } else {
-            return colorFromListeners(point.n_pct_listeners);
+            return colorFromPct(point[colorFieldInp.value]);
         }
     }
 
@@ -274,6 +284,17 @@ d3.csv('data/ds.csv', function (d) {
     }
 
     searchColorFindingsInp.addEventListener('input', event => colorFilterResults());
+
+    function updateColors() {
+        colorFilterResults();
+        for (let i = 0; i < generated_points.length; i++) {
+            let color = new THREE.Color(getColor(generated_points[i], false));
+            pointsGeometry.colors[i] = color;
+        }
+        pointsGeometry.colorsNeedUpdate = true;
+    }
+
+    colorFieldInp.addEventListener('input', event => updateColors());
 
     // Hover and tooltip interaction
 
