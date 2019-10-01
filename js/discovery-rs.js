@@ -303,8 +303,29 @@ d3.csv('data/ds.csv', function (d) {
     view.on("mousemove", () => {
         let [mouseX, mouseY] = d3.mouse(view.node());
         let mouse_position = [mouseX, mouseY];
-        checkIntersects(mouse_position);
+        const [datum, fromFilter] = getIntersect(mouse_position);
+        if (datum) {
+            highlightPoint(datum, fromFilter);
+            showTooltip(mouse_position, datum, fromFilter);
+        } else {
+            removeHighlights();
+            hideTooltip();
+        }
     });
+
+    view.on("click", () => {
+        let [mouseX, mouseY] = d3.mouse(view.node());
+        let mouse_position = [mouseX, mouseY];
+        const [datum, fromFilter] = getIntersect(mouse_position);
+        if (datum) {
+            let textArea = document.createElement("textarea");
+            document.body.appendChild(textArea);
+            textArea.value = datum['t_name'];
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+        }
+    })
 
     function mouseToThree(mouseX, mouseY) {
         return new THREE.Vector3(
@@ -314,7 +335,7 @@ d3.csv('data/ds.csv', function (d) {
         );
     }
 
-    function checkIntersects(mouse_position) {
+    function getIntersect(mouse_position) {
         let mouse_vector = mouseToThree(...mouse_position);
         raycaster.setFromCamera(mouse_vector, camera);
         let pointsObj = null;
@@ -332,11 +353,9 @@ d3.csv('data/ds.csv', function (d) {
             let intersect = sorted_intersects[0];
             let index = pointsObj.idxs[intersect.index];
             let datum = generated_points[index];
-            highlightPoint(datum, fromFilter);
-            showTooltip(mouse_position, datum, fromFilter);
+            return [datum, fromFilter];
         } else {
-            removeHighlights();
-            hideTooltip();
+            return [null, fromFilter];
         }
     }
 
