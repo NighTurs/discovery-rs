@@ -225,7 +225,6 @@ d3.csv('data/ds.csv', function (d) {
             filterContainer.remove(...filterContainer.children);
             searchOpt = { fields: {} }
             searchOpt.fields[searchFieldInp.value] = { bool: "AND" }
-            console.log(searchOpt);
             found = index.search(newVal, searchOpt);
             if (found.length > 0) {
                 let geometry = new THREE.Geometry();
