@@ -22,9 +22,9 @@ let width = window.innerWidth - toolbarWidth;
 let viz_width = width;
 let height = window.innerHeight;
 
-let fov = 40;
+let fov = 20;
 let near = 2;
-let far = 400;
+let far = 800;
 
 // Set up camera and scene
 let camera = new THREE.PerspectiveCamera(
