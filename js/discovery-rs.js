@@ -422,15 +422,27 @@ d3.csv('data/ds.csv', function (d) {
         while ($tooltip.firstChild) {
             $tooltip.removeChild($tooltip.firstChild);
         }
+        $tooltip.innerHTML += `<div style="padding: 4px; margin-bottom: 4px; background: ${getColor(tooltip_state.data, tooltip_state.fromFilter)};"><b>${tooltip_state.data.t_name}</b></div>`;
         for (field in tooltip_state.data) {
-            $tooltip.innerHTML += `<div id="point_tip" style="padding: 4px;">${field}: ${tooltip_state.data[field]}</div>`;
+            if (field == "t_name") {
+                continue;
+            }
+            let val = tooltip_state.data[field];
+            // Format floats
+            if (Number(val) === val && val % 1 !== 0) {
+                val = val.toFixed(4);
+            }
+            if (field === "position") {
+                val = [val[0].toFixed(4), val[1].toFixed(4)];
+            }
+            $tooltip.innerHTML += `<div style="padding: 4px;">${field}: ${val}</div>`;
         }
         $tooltip.style.left = tooltip_state.left + 'px';
         $tooltip.style.top = tooltip_state.top + 'px';
     }
 
     function showTooltip(mouse_position, datum, fromFilter) {
-        let tooltip_width = 120;
+        let tooltip_width = 150;
         let x_offset = -tooltip_width / 2;
         let y_offset = 30;
         tooltip_state.display = "block";
