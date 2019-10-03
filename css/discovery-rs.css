@@ -8,6 +8,10 @@ html, body {
     text-rendering: optimizeLegibility;
 }
 
+#title {
+    text-align: center;
+}
+
 #toolbar {
     position: absolute;
     right: 0;
