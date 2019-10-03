@@ -113,7 +113,7 @@ d3.json('data/ds_index.json').then(function (d) {
     for (let field of index.getFields()) {
         var opt = document.createElement('option');
         opt.value = field;
-        opt.innerHTML = field;
+        opt.innerHTML = field.substr(2);
         searchFieldInp.appendChild(opt);
     }
     loadingInc++;
@@ -136,7 +136,7 @@ d3.csv('data/ds.csv', function (d) {
         if (field.startsWith('n_')) {
             var opt = document.createElement('option');
             opt.value = field;
-            opt.innerHTML = field;
+            opt.innerHTML = field.substr(2);
             colorFieldInp.appendChild(opt);
         }
     }
@@ -427,6 +427,10 @@ d3.csv('data/ds.csv', function (d) {
             if (field == "t_name") {
                 continue;
             }
+            let key = field;
+            if (key.startsWith('n_') || key.startsWith('t_')) {
+                key = key.substr(2);
+            }
             let val = tooltip_state.data[field];
             // Format floats
             if (Number(val) === val && val % 1 !== 0) {
@@ -435,7 +439,7 @@ d3.csv('data/ds.csv', function (d) {
             if (field === "position") {
                 val = [val[0].toFixed(4), val[1].toFixed(4)];
             }
-            $tooltip.innerHTML += `<div style="padding: 4px;">${field}: ${val}</div>`;
+            $tooltip.innerHTML += `<div style="padding: 4px;">${key}: ${val}</div>`;
         }
         $tooltip.style.left = tooltip_state.left + 'px';
         $tooltip.style.top = tooltip_state.top + 'px';
