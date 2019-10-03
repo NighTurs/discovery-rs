@@ -50,7 +50,7 @@ renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
 
 let zoom = d3.zoom()
-    .scaleExtent([getScaleFromZ(far), getScaleFromZ(near)])
+    .scaleExtent([getScaleFromZ(far), getScaleFromZ(near + 1)])
     .on('zoom', () => {
         let d3_transform = d3.event.transform;
         zoomHandler(d3_transform);
