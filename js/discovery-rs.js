@@ -406,7 +406,8 @@ d3.csv('data/ds.csv', function (d) {
     }
 
     view.on("mouseleave", () => {
-        removeHighlights()
+        removeHighlights();
+        hideTooltip();
     });
 
     // Initial tooltip state
