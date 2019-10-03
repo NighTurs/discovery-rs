@@ -99,6 +99,14 @@ function toRadians(angle) {
     return angle * (Math.PI / 180);
 }
 
+let loadingInc = 0;
+
+function checkIfLoading() {
+    if (loadingInc == 2) {
+        document.querySelector('#loader-outer').style.display = "none";
+    }
+}
+
 let index = null;
 d3.json('data/ds_index.json').then(function (d) {
     index = elasticlunr.Index.load(d);
@@ -108,6 +116,8 @@ d3.json('data/ds_index.json').then(function (d) {
         opt.innerHTML = field;
         searchFieldInp.appendChild(opt);
     }
+    loadingInc++;
+    checkIfLoading();
 });
 
 d3.csv('data/ds.csv', function (d) {
@@ -435,4 +445,6 @@ d3.csv('data/ds.csv', function (d) {
         tooltip_state.display = "none";
         updateTooltip();
     }
+    loadingInc++;
+    checkIfLoading();
 })
