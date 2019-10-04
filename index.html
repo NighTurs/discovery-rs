@@ -16,49 +16,49 @@
 <body>
     <div id="toolbar" class="flex-c flex-v">
         <h2 id="title">Discovery-RS</h2>
-        <label class="flex-c flex-v">
-            <div class="flex-a-c no-select">
-                <span class="label">Points size</span>
-                <span id="points-size-value" class="value">3</span>
+        <fieldset>
+            <legend>Point</legend>
+            <div class="flex-c flex-v control">
+                <div class="flex-a-c no-select">
+                    <span class="label">Size</span>
+                    <span id="points-size-value" class="value">3</span>
+                </div>
+                <input id="points-size" type="range" min="0.1" max="10" step="0.1" value="3">
             </div>
-            <input id="points-size" type="range" min="0.1" max="10" step="0.1" value="3">
-        </label>
-        <label class="flex-c flex-v">
-            <div class="flex-a-c no-select">
-                <span class="label">Points opacity</span>
-                <span id="points-opacity-value" class="value">1</span>
+            <div class="flex-c flex-v control">
+                <div class="flex-a-c no-select">
+                    <span class="label">Opacity</span>
+                    <span id="points-opacity-value" class="value">1</span>
+                </div>
+                <input id="points-opacity" type="range" min="0.05" max="1" step="0.05" value="1">
             </div>
-            <input id="points-opacity" type="range" min="0.05" max="1" step="0.05" value="1">
-        </label>
-        <label class="flex-c flex-v">
-            <div class="flex-a-c no-select">
-                <span class="label">Search</span>
-            </div>
-            <div class="flex-a-c">
-                <span class="label">Field</span>
-                <select id="search-field">
-                </select>
-            </div>
-            <input id="search" type="text">
-            <div class="flex-a-c">
-                <input id="hide-others" type="checkbox">
-                <label>Hide others</label>
-            </div>
-            <div class="flex-a-c">
-                <input id="color-findings" type="checkbox">
-                <label>Color findings</label>
-            </div>
-        </label>
-        <label class="flex-c flex-v">
-            <div class="flex-a-c">
-                <span class="label">Color By</span>
+            <div class="flex-a-c control">
+                <span class="label">Color</span>
                 <select id="color-field">
                 </select>
             </div>
-        </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Search</legend>
+            <div class="flex-a-c control">
+                <span class="label no-select">Field</span>
+                <select id="search-field">
+                </select>
+            </div>
+            <input class="control" id="search" type="text">
+            <div class="flex-a-c control">
+                <input id="hide-others" type="checkbox">
+                <label>Hide others</label>
+            </div>
+            <div class="flex-a-c control">
+                <input id="color-findings" type="checkbox">
+                <label>Color findings</label>
+            </div>
+        </fieldset>
     </div>
-    <div id="loader-outer"> 
-        <div id="loader"></div> 
+    <div id="loader-outer">
+        <div id="loader"></div>
     </div>
     <script src='js/discovery-rs.js'></script>
 </body>

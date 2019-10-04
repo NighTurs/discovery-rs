@@ -17,10 +17,17 @@ html, body {
     right: 0;
     top: 0;
     width: 200px;
-    height: 100%;
     padding: 5px;
     color: white;
     background-color: rgb(32, 32, 32);
+}
+
+input[type=text] {
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }
 
 input[type=range] {
@@ -153,8 +160,18 @@ input[type=range]:hover::-ms-thumb {
     user-select: none;
 }
 
-#toolbar label {
+#toolbar h2 {
     margin: 5px 0;
+}
+
+.control {
+    margin: 5px 0;
+}
+
+fieldset {
+    padding: 0 5px;
+    margin: 0px;
+    border:2px solid #444;
 }
 
 #toolbar label:last-child {

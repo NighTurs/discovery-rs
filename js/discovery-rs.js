@@ -16,9 +16,7 @@ const initPointsOpacity = 1.0
 
 const findingsColor = '#28aefc'
 
-let toolbarWidth = document.querySelector('#toolbar').clientWidth
-
-let width = window.innerWidth - toolbarWidth;
+let width = window.innerWidth;
 let viz_width = width;
 let height = window.innerHeight;
 
@@ -35,7 +33,7 @@ let camera = new THREE.PerspectiveCamera(
 );
 
 window.addEventListener('resize', () => {
-    width = window.innerWidth - toolbarWidth;
+    width = window.innerWidth;
     viz_width = width;
     height = window.innerHeight;
 
