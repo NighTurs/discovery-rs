@@ -97,6 +97,32 @@ function toRadians(angle) {
     return angle * (Math.PI / 180);
 }
 
+JSZipUtils.getBinaryContent('data/data.zip', function (err, data) {
+    if (err) {
+        throw err;
+    }
+    JSZip.loadAsync(data).then(function (zip) {
+        zip.file("ds.csv").async("string").then(function (ds_csv) {
+            let generated_points = d3.csvParse(ds_csv, function (d) {
+                d.idx = +d.idx;
+                d.position = [+d.x, +d.y];
+                delete d.x;
+                delete d.y;
+                for (field in d) {
+                    if (field.startsWith('n_')) {
+                        d[field] = +d[field];
+                    }
+                }
+                return d;
+            });
+            loadPoints(generated_points);
+        });
+        zip.file("ds_index.json").async("string").then(function (index_str) {
+            loadIndex(JSON.parse(index_str))
+        });
+    });
+});
+
 let loadingInc = 0;
 
 function checkIfLoading() {
@@ -106,8 +132,9 @@ function checkIfLoading() {
 }
 
 let index = null;
-d3.json('data/ds_index.json').then(function (d) {
-    index = elasticlunr.Index.load(d);
+    
+function loadIndex(index) {
+    index = elasticlunr.Index.load(index);
     for (let field of index.getFields()) {
         var opt = document.createElement('option');
         opt.value = field;
@@ -116,20 +143,9 @@ d3.json('data/ds_index.json').then(function (d) {
     }
     loadingInc++;
     checkIfLoading();
-});
+}
 
-d3.csv('data/ds.csv', function (d) {
-    d.idx = +d.idx;
-    d.position = [+d.x, +d.y];
-    delete d.x;
-    delete d.y;
-    for (field in d) {
-        if (field.startsWith('n_')) {
-            d[field] = +d[field];
-        }
-    }
-    return d;
-}).then(function (generated_points) {
+function loadPoints(generated_points) {
     for (field in generated_points[0]) {
         if (field.startsWith('n_')) {
             var opt = document.createElement('option');
@@ -462,4 +478,4 @@ d3.csv('data/ds.csv', function (d) {
     }
     loadingInc++;
     checkIfLoading();
-})
+}
