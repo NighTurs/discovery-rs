@@ -384,7 +384,9 @@ function loadPoints(generated_points) {
     }
 
     function sortIntersectsByDistanceToRay(intersects) {
-        return _.sortBy(intersects, "distanceToRay");
+        let res = intersects.slice();
+        res.sort((a,b) => (a.distanceToRay > b.distanceToRay) ? 1 : ((b.distanceToRay > a.distanceToRay) ? -1 : 0));
+        return res;
     }
 
     hoverContainer = new THREE.Object3D()
