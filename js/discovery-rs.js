@@ -133,8 +133,8 @@ function checkIfLoading() {
 
 let index = null;
     
-function loadIndex(index) {
-    index = elasticlunr.Index.load(index);
+function loadIndex(data) {
+    index = elasticlunr.Index.load(data);
     for (let field of index.getFields()) {
         var opt = document.createElement('option');
         opt.value = field;
