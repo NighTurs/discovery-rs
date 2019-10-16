@@ -4,3 +4,6 @@ data/processed/*
 !data/processed/.gitkeep
 web/data/
 web/js/node_modules
+
+*.pyc
+*.pyo
