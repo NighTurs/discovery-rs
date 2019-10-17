@@ -2,20 +2,28 @@ import argparse
 import os
 import pickle
 import pandas as pd
+import numpy as np
 
 
 def process_raw(input, output_dir, playcount_threshold, user_artists_threshold, artist_users_threshold):
     ds = pd.read_csv(input, sep='\t', header=None, names=[
-                     'user', 'artist_mbid', 'artist_name', 'playcount'])
+                     'user', 'artist_mbid', 'artist_name', 'playcount'],
+                     na_values=[], keep_default_na=False)
     print('Overall records:', ds.shape[0])
     print('Overall users:', len(ds['user'].unique()))
-    print('Overall artists:', len(ds['artist_name'].unique()))
+    print('Overall artists:', ds.drop_duplicates(
+        subset=['artist_name', 'artist_mbid']).shape[0])
 
     ds = ds[ds['playcount'] >= playcount_threshold]
     ds = user_artists_count_filter(ds, user_artists_threshold)
     ds = artist_user_count_filter(ds, artist_users_threshold)
     ds = user_artists_count_filter(ds, user_artists_threshold)
     ds = artist_user_count_filter(ds, artist_users_threshold)
+
+    print('Left records:', ds.shape[0])
+    print('Left users:', len(ds['user'].unique()))
+    print('Left artists:', ds.drop_duplicates(
+        subset=['artist_name', 'artist_mbid']).shape[0])
 
     u2i = {u: i for i, u in enumerate(ds['user'].drop_duplicates())}
     a2i = {(a.artist_name, a.artist_mbid): i for i, a in enumerate(
@@ -34,10 +42,6 @@ def process_raw(input, output_dir, playcount_threshold, user_artists_threshold, 
     with open(os.path.join(output_dir, 'a2i.pickle'), 'wb') as handle:
         pickle.dump(a2i, handle)
 
-    print('Left records:', ds.shape[0])
-    print('Left users:', len(ds['user'].unique()))
-    print('Left artists:', len(ds['artist_name'].unique()))
-
 
 def user_artists_count_filter(ds, user_artists_threshold):
     ct = ds.groupby('user')['playcount'].count()
@@ -46,9 +50,9 @@ def user_artists_count_filter(ds, user_artists_threshold):
 
 
 def artist_user_count_filter(ds, artist_users_threshold):
-    ct = ds.groupby('artist_mbid')['playcount'].count()
-    keep_artists = ct[ct >= artist_users_threshold].index.values
-    return ds[ds['artist_mbid'].isin(keep_artists)]
+    ct = ds.groupby(['artist_name', 'artist_mbid'])['playcount'].count()
+    keep_artists = ct[ct >= artist_users_threshold].index.to_frame(index=False)
+    return pd.merge(ds, keep_artists, how='inner', on=['artist_name', 'artist_mbid'])
 
 
 if __name__ == '__main__':
