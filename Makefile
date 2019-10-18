@@ -5,10 +5,10 @@ data/raw/lastfm-dataset-360K:
 
 processed_lastfm_360k: data/processed/lastfm/ds.csv
 
-data/processed/lastfm/ds.csv: raw_lastfm_360k
+data/processed/lastfm/ds.csv: data/raw/lastfm-dataset-360K
 	python -m scripts.lastfm.process_raw --input data/raw/lastfm-dataset-360K/usersha1-artmbid-artname-plays.tsv --output_dir data/processed/lastfm
 
-train_lastfm_360k_model: processed_lastfm_360k
+train_lastfm_360k_model: data/processed/lastfm/ds.csv
 	python -m scripts.lastfm.train_rs \
 		--input_dir data/processed/lastfm \
 		--model_name model \
@@ -20,3 +20,8 @@ train_lastfm_360k_model: processed_lastfm_360k
 		--batch_size 256 \
 		--mask_pct 0.5 \
 		--w_mask_ratio 2.5
+
+musicbrainz_data: data/processed/lastfm/musicbrainz.pickle
+
+data/processed/lastfm/musicbrainz.pickle: data/processed/lastfm/ds.csv
+	python -m scripts.lastfm.get_musicbrainz_data --input_dir data/processed/lastfm
