@@ -8,7 +8,9 @@ processed_lastfm_360k: data/processed/lastfm/ds.csv
 data/processed/lastfm/ds.csv: data/raw/lastfm-dataset-360K
 	python -m scripts.lastfm.process_raw --input data/raw/lastfm-dataset-360K/usersha1-artmbid-artname-plays.tsv --output_dir data/processed/lastfm
 
-train_lastfm_360k_model: data/processed/lastfm/ds.csv
+train_lastfm_360k_model: fastai/models/model.pth
+
+fastai/models/model.pth: data/processed/lastfm/ds.csv
 	python -m scripts.lastfm.train_rs \
 		--input_dir data/processed/lastfm \
 		--model_name model \
@@ -25,3 +27,8 @@ musicbrainz_data: data/processed/lastfm/musicbrainz.pickle
 
 data/processed/lastfm/musicbrainz.pickle: data/processed/lastfm/ds.csv
 	python -m scripts.lastfm.get_musicbrainz_data --input_dir data/processed/lastfm
+
+tsne_embedding: data/processed/lastfm/tsne_emb.csv
+
+data/processed/lastfm/tsne_emb.csv: fastai/models/model.pth
+	python -m scripts.lastfm.tsne_emb --model fastai/models/model.pth --output_dir data/processed/lastfm
