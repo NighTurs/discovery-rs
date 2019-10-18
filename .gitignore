@@ -1,9 +1,12 @@
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
-!data/processed/.gitkeep
+!data/processed/lastfm
+data/processed/lastfm/*
+!data/processed/lastfm/my_list.txt
 web/data/
 web/js/node_modules
+fastai
 
 *.pyc
 *.pyo
