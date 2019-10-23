@@ -1,3 +1,5 @@
+# Lastfm 360k targets
+
 raw_lastfm_360k: data/raw/lastfm-dataset-360K
 
 data/raw/lastfm-dataset-360K:
@@ -55,4 +57,15 @@ lastfm_web_archive: web/data/lastfm.zip
 
 web/data/lastfm.zip: data/processed/lastfm/web.csv data/processed/lastfm/web_index.json
 	(cd -- data/processed/lastfm && zip lastfm.zip web.csv web_index.json) && cp data/processed/lastfm/lastfm.zip web/data/
-	
+
+# Movielens targets
+
+raw_ml: data/raw/ml-latest
+
+data/raw/ml-latest:
+	(cd data/raw && wget http://files.grouplens.org/datasets/movielens/ml-latest.zip && unzip ml-latest.zip)
+
+processed_ml: data/processed/ml/ds.csv
+
+data/processed/ml/ds.csv: data/raw/ml-latest
+	python -m scripts.movielens.process_raw --input_dir data/raw/ml-latest --output_dir data/processed/ml
