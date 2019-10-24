@@ -174,11 +174,11 @@ if __name__ == '__main__':
                         help='Embedding size')
     parser.add_argument('--batch_size', type=int, required=True,
                         help='Batch size')
-    parser.add_argument('--mask_pct', type=float, required=True,
+    parser.add_argument('--hide_pct', type=float, required=True,
                         help='Percentage of artists to hide during training')
-    parser.add_argument('--w_mask_ratio', type=float, required=True,
+    parser.add_argument('--w_hide_ratio', type=float, required=True,
                         help='Ratio of loss weight of hidden to unhidden artists')
 
     args = parser.parse_args()
     train_rs(args.input_dir, args.model_name, args.w_neg, args.lr,
-             args.wd, args.epochs, args.emb_size, args.batch_size, args.mask_pct, args.w_mask_ratio)
+             args.wd, args.epochs, args.emb_size, args.batch_size, args.hide_pct, args.w_hide_ratio)

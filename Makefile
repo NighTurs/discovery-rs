@@ -22,8 +22,8 @@ fastai/models/model.pth: data/processed/lastfm/ds.csv
 		--epochs 4 \
 		--emb_size 700 \
 		--batch_size 256 \
-		--mask_pct 0.5 \
-		--w_mask_ratio 2.5
+		--hide_pct 0.5 \
+		--w_hide_ratio 2.5
 
 musicbrainz_data: data/processed/lastfm/musicbrainz.pickle
 
