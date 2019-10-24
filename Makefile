@@ -69,3 +69,18 @@ processed_ml: data/processed/ml/ds.csv
 
 data/processed/ml/ds.csv: data/raw/ml-latest
 	python -m scripts.movielens.process_raw --input_dir data/raw/ml-latest --output_dir data/processed/ml
+
+train_ml_model: fastai/models/ml_model.pth
+
+fastai/models/ml_model.pth: data/processed/ml/ds.csv
+	python -m scripts.movielens.train_rs \
+		--input_dir data/processed/ml \
+		--model_name ml_model \
+		--lr 0.001 \
+		--wd 0.07 \
+		--epochs 30 \
+		--emb_size 500 \
+		--batch_movies 5000 \
+		--mem_limit 20000000 \
+		--hide_pct 0.3 \
+		--w_hide_ratio 2.5
