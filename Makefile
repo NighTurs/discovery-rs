@@ -68,7 +68,8 @@ data/raw/ml-latest:
 ml_processed: data/processed/ml/ds.csv
 
 data/processed/ml/ds.csv: data/raw/ml-latest
-	python -m scripts.movielens.process_raw --input_dir data/raw/ml-latest --output_dir data/processed/ml
+	python -m scripts.movielens.process_raw --input_dir data/raw/ml-latest --output_dir data/processed/ml \
+		--movie_users_threshold 15
 
 ml_train_model: fastai/models/ml_model.pth
 
@@ -89,3 +90,11 @@ ml_tsne_embedding: data/processed/ml/tsne_emb.csv
 
 data/processed/ml/tsne_emb.csv: fastai/models/ml_model.pth
 	python -m scripts.movielens.tsne_emb --model fastai/models/ml_model.pth --output_dir data/processed/ml
+
+ml_rs_recommend: data/processed/ml/recommendations.pickle
+
+data/processed/ml/recommendations.pickle: fastai/models/ml_model.pth data/processed/ml/ds.csv
+	python -m scripts.movielens.rs_recommend \
+	--input_dir data/processed/ml \
+	--model_path fastai/models/ml_model.pth \
+	--artist_list data/processed/ml/my_list.csv

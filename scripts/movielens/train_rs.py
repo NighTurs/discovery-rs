@@ -232,7 +232,9 @@ def train_rs(input_dir, model_name, lr, wd, epochs, emb_size, batch_movies, mem_
     print('Test train split...')
     train, valid = train_test_split(ds)
     print('Unbiasing...')
-    unbias(train, valid)
+    train, valid, bias = unbias(train, valid, len(m2i))
+    with open(path.join(input_dir, 'bias.pickle'), 'wb') as handle:
+        pickle.dump(bias, handle)
     print('Grouping dataset by user')
     groups_t, groups_v = train.groupby('user'), valid.groupby('user')
     movies_t, movies_v = groups_t['movie'].apply(
@@ -272,14 +274,19 @@ def train_rs(input_dir, model_name, lr, wd, epochs, emb_size, batch_movies, mem_
     learner.save(model_name)
 
 
-def unbias(train, valid):
+def unbias(train, valid, nmovies):
     mean_movie = train.groupby('movie')['rating'].mean()
+    bias = np.zeros(nmovies, dtype=np.float32)
+    bias[mean_movie.index.values] = mean_movie
+    bias = torch.tensor(bias)
+    
     train = train.merge(mean_movie.to_frame(), on='movie',
                         suffixes=('', '_mean_movie'))
     train['rating'] = train['rating'] - train['rating_mean_movie']
     valid = valid.merge((mean_movie).to_frame(), on='movie',
                         suffixes=('', '_mean_movie'))
     valid['rating'] = valid['rating'] - valid['rating_mean_movie']
+    return train, valid, bias
 
 
 def train_test_split(ds):
