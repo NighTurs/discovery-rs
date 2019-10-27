@@ -51,7 +51,7 @@ data/processed/lastfm/web.csv: data/processed/lastfm/ds.csv data/processed/lastf
 lastfm_elasticlunr_index: data/processed/lastfm/web_index.json
 
 data/processed/lastfm/web_index.json: data/processed/lastfm/web.csv
-	node scripts/indexer.js
+	node scripts/indexer.js data/processed/lastfm
 
 lastfm_web_archive: web/data/lastfm.zip
 
@@ -98,3 +98,18 @@ data/processed/ml/recommendations.pickle: fastai/models/ml_model.pth data/proces
 	--input_dir data/processed/ml \
 	--model_path fastai/models/ml_model.pth \
 	--artist_list data/processed/ml/my_list.csv
+
+ml_web_data: data/processed/ml/web.csv
+
+data/processed/ml/web.csv: data/processed/ml/tsne_emb.csv data/processed/ml/recommendations.pickle
+	python -m scripts.movielens.assemble_web_data --raw_dir data/raw/ml-latest --processed_dir data/processed/ml
+
+ml_elasticlunr_index: data/processed/ml/web_index.json
+
+data/processed/ml/web_index.json: data/processed/ml/web.csv
+	node scripts/indexer.js data/processed/ml
+
+ml_web_archive: web/data/ml.zip
+
+web/data/ml.zip: data/processed/ml/web.csv data/processed/ml/web_index.json
+	(cd -- data/processed/ml && zip ml.zip web.csv web_index.json) && cp data/processed/ml/ml.zip web/data/
