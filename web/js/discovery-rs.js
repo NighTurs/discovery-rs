@@ -10,6 +10,7 @@ const searchColorFindingsInp = document.querySelector('#color-findings');
 
 const searchFieldInp = document.querySelector('#search-field');
 const colorFieldInp = document.querySelector('#color-field');
+const datasetFieldInp = document.querySelector('#dataset-field');
 
 const initPointsSize = 3
 const initPointsOpacity = 1.0
@@ -97,7 +98,25 @@ function toRadians(angle) {
     return angle * (Math.PI / 180);
 }
 
-JSZipUtils.getBinaryContent('data/lastfm.zip', function (err, data) {
+function datasetRedirect() {
+    window.location = window.location.origin + window.location.pathname + "?ds=" + datasetFieldInp.value
+}
+
+datasetFieldInp.addEventListener('change', event => datasetRedirect());
+
+const urlParams = new URLSearchParams(window.location.search);
+
+ds = urlParams.get('ds');
+
+if (!ds) {
+    ds = datasetFieldInp.value
+}
+
+if (datasetFieldInp.value != ds) {
+    datasetFieldInp.value = ds
+}
+
+JSZipUtils.getBinaryContent(`data/${ds}.zip`, function (err, data) {
     if (err) {
         throw err;
     }
@@ -132,7 +151,7 @@ function checkIfLoading() {
 }
 
 let index = null;
-    
+
 function loadIndex(data) {
     index = elasticlunr.Index.load(data);
     for (let field of index.getFields()) {
@@ -385,7 +404,7 @@ function loadPoints(generated_points) {
 
     function sortIntersectsByDistanceToRay(intersects) {
         let res = intersects.slice();
-        res.sort((a,b) => (a.distanceToRay > b.distanceToRay) ? 1 : ((b.distanceToRay > a.distanceToRay) ? -1 : 0));
+        res.sort((a, b) => (a.distanceToRay > b.distanceToRay) ? 1 : ((b.distanceToRay > a.distanceToRay) ? -1 : 0));
         return res;
     }
 
