@@ -14,8 +14,15 @@ def assemble_web_data(raw_dir, processed_dir):
         recommendations = pickle.load(handle)
     movies = pd.read_csv(path.join(raw_dir, 'movies.csv'))
     links = pd.read_csv(path.join(raw_dir, 'links.csv'))
+    tags = pd.read_csv(path.join(raw_dir, 'genome-tags.csv'))
+    tag_score = pd.read_csv(path.join(raw_dir, 'genome-scores.csv'))
+    tags = tag_score.merge(tags, on='tagId')
+    tags = tags.groupby('movieId').apply(lambda x: ', '.join(
+        [y.tag for y in x.sort_values('relevance', ascending=False).iloc[:10, :].itertuples()]))
+
     movies = movies.merge(links, on='movieId', how='outer')
-    movies = {x.movieId: (x.title, x.genres, x.imdbId) for x in movies.itertuples()}      
+    movies = {x.movieId: (x.title, x.genres, x.imdbId)
+              for x in movies.itertuples()}
     ds = pd.read_csv(path.join(processed_dir, 'ds.csv'))
     freq = ds.groupby('movie')['user'].count()
     freq_pct = percentile(freq)
@@ -28,10 +35,11 @@ def assemble_web_data(raw_dir, processed_dir):
                         'y': tsne_emb['y'][:-1],
                         't_name': [movies[i2m[i]][0] for i in range(nmovies)],
                         't_genres': [', '.join(movies[i2m[i]][1].split('|')) for i in range(nmovies)],
+                        't_tags': [tags.at[i2m[i]] if i2m[i] in tags.index else '' for i in range(nmovies)],
                         'recommend_rating': recommendations,
                         'n_recommend_pct': percentile(pd.Series(recommendations)),
                         'avg_rating': bias,
-                        'n_avg_rating': avg_rating_pct,
+                        'n_avg_rating_pct': avg_rating_pct,
                         'freq': freq,
                         'n_freq_pct': freq_pct,
                         'ml_id': [i2m[i] for i in range(nmovies)],

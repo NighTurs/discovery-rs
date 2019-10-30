@@ -10,13 +10,13 @@ from openTSNE.callbacks import ErrorLogger
 
 def tsne_emb(model_path, output_dir):
     model = torch.load(model_path, map_location=torch.device('cpu'))['model']
-    w = np.concatenate((model['memb.weight'].numpy(), model['memb2.weight'].numpy()), axis=1)
+    w = model['memb.weight'].numpy()
 
     affinities_multiscale_mixture = affinity.Multiscale(
         w,
-        perplexities=[30, 200],
+        perplexities=[50, 500],
         metric="cosine",
-        n_jobs=4,
+        n_jobs=-1,
         random_state=3)
 
     init = initialization.pca(w, random_state=42)
@@ -25,14 +25,11 @@ def tsne_emb(model_path, output_dir):
         init,
         affinities_multiscale_mixture,
         negative_gradient_method="fft",
-        n_jobs=4,
+        n_jobs=-1,
         callbacks=ErrorLogger())
 
-    embedding = embedding.optimize(n_iter=250, exaggeration=12, momentum=0.5)
     embedding = embedding.optimize(
-        n_iter=2000, exaggeration=1, momentum=0.8, learning_rate=500)
-    embedding = embedding.optimize(
-        n_iter=2000, exaggeration=1, momentum=0.8, learning_rate=1000)
+        n_iter=1500, exaggeration=None, momentum=0.8, learning_rate=1000)
     df = pd.DataFrame(embedding, columns=['x', 'y'])
     df.to_csv(path.join(output_dir, 'tsne_emb.csv'), index=False)
 

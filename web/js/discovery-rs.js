@@ -429,7 +429,7 @@ function loadPoints(generated_points) {
     // Initial tooltip state
     let tooltip_state = { display: "none", data: {} }
 
-    let tooltip_template = document.createRange().createContextualFragment(`<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 150px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;"/>`);
+    let tooltip_template = document.createRange().createContextualFragment(`<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 200px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;"/>`);
     document.body.append(tooltip_template);
 
     let $tooltip = document.querySelector('#tooltip');
@@ -463,7 +463,7 @@ function loadPoints(generated_points) {
     }
 
     function showTooltip(mouse_position, datum, fromFilter) {
-        let tooltip_width = 150;
+        let tooltip_width = 200;
         let x_offset = -tooltip_width / 2;
         let y_offset = 30;
         tooltip_state.display = "block";
