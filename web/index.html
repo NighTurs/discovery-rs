@@ -46,6 +46,21 @@
                 </select>
             </div>
         </fieldset>
+        <fieldset>
+            <legend>Filter</legend>
+            <div class="flex-a-c control">
+                <span class="label">Field</span>
+                <select id="filter-field">
+                </select>
+            </div>
+            <div class="flex-c flex-v control">
+                <div class="flex-a-c no-select">
+                    <span class="label">Min Value</span>
+                    <span id="filter-value" class="value">0</span>
+                </div>
+                <input id="filter-range" type="range" min="0" max="1" step="0.001" value="0">
+            </div>
+        </fieldset>
 
         <fieldset>
             <legend>Search</legend>

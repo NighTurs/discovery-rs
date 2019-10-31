@@ -4,6 +4,9 @@ const pointsSizeVal = document.querySelector('#points-size-value');
 const pointsOpacityInp = document.querySelector('#points-opacity');
 const pointsOpacityVal = document.querySelector('#points-opacity-value');
 
+const filterInp = document.querySelector('#filter-range');
+const filterVal = document.querySelector('#filter-value');
+
 const searchInp = document.querySelector('#search');
 const searchHideOthersInp = document.querySelector('#hide-others');
 const searchColorFindingsInp = document.querySelector('#color-findings');
@@ -11,6 +14,7 @@ const searchColorFindingsInp = document.querySelector('#color-findings');
 const searchFieldInp = document.querySelector('#search-field');
 const colorFieldInp = document.querySelector('#color-field');
 const datasetFieldInp = document.querySelector('#dataset-field');
+const filterFieldInp = document.querySelector('#filter-field');
 
 const initPointsSize = 3
 const initPointsOpacity = 1.0
@@ -171,13 +175,12 @@ function loadPoints(generated_points) {
             opt.value = field;
             opt.innerHTML = field.substr(2);
             colorFieldInp.appendChild(opt);
+            filterFieldInp.appendChild(opt.cloneNode(true));
         }
     }
 
-    let pointsGeometry = new THREE.Geometry();
-
     function colorFromPct(v) {
-        return d3.interpolateOranges(1 - v)
+        return d3.interpolateOranges(1 - v);
     }
 
     function getColor(point, fromFilter) {
@@ -188,37 +191,52 @@ function loadPoints(generated_points) {
         }
     }
 
-    let colors = [];
-    let idxs = [];
-    let idx = 0;
-    for (let datum of generated_points) {
-        // Set vector coordinates from data
-        let vertex = new THREE.Vector3(datum.position[0], datum.position[1], 0);
-        pointsGeometry.vertices.push(vertex);
-        let color = new THREE.Color(getColor(datum, false));
-        colors.push(color);
-        idxs.push(idx++);
+    function applyFilter(point) {
+        return filterInp.value <= point[filterFieldInp.value];
     }
-    pointsGeometry.colors = colors;
-
-    let pointsMaterial = new THREE.PointsMaterial({
-        size: initPointsSize,
-        sizeAttenuation: false,
-        vertexColors: THREE.VertexColors,
-        map: circle_sprite,
-        opacity: 1,
-        transparent: true
-    });
-
-    let points = new THREE.Points(pointsGeometry, pointsMaterial);
-    points.idxs = idxs;
-
+    
     let scene = new THREE.Scene();
-    scene.add(points);
     scene.background = new THREE.Color(0x0000000);
+    pointsContainer = new THREE.Object3D();
+    searchContainer = new THREE.Object3D();
+    scene.add(pointsContainer);
+    scene.add(searchContainer);
 
-    filterContainer = new THREE.Object3D()
-    scene.add(filterContainer);
+    function addPoints() {
+        pointsContainer.remove(...pointsContainer.children);
+        let pointsGeometry = new THREE.Geometry();
+        let colors = [];
+        let idxs = [];
+        let idx = -1;
+        for (let datum of generated_points) {
+            idx++;
+            if (!applyFilter(datum)) {
+                continue;
+            }
+            // Set vector coordinates from data
+            let vertex = new THREE.Vector3(datum.position[0], datum.position[1], 0);
+            pointsGeometry.vertices.push(vertex);
+            let color = new THREE.Color(getColor(datum, false));
+            colors.push(color);
+            idxs.push(idx);
+        }
+        pointsGeometry.colors = colors;
+
+        let pointsMaterial = new THREE.PointsMaterial({
+            size: initPointsSize,
+            sizeAttenuation: false,
+            vertexColors: THREE.VertexColors,
+            map: circle_sprite,
+            opacity: 1,
+            transparent: true
+        });
+
+        let points = new THREE.Points(pointsGeometry, pointsMaterial);
+        points.idxs = idxs;
+        pointsContainer.add(points);
+    }
+
+    addPoints();
 
     // Three.js render loop
     function animate() {
@@ -230,9 +248,9 @@ function loadPoints(generated_points) {
     function pointsSizeInputHandler(newVal) {
         pointsSizeInp.value = newVal;
         pointsSizeVal.innerHTML = newVal;
-        points.material.size = newVal;
-        if (filterContainer.children.length > 0) {
-            filterContainer.children[0].material.size = newVal;
+        pointsContainer.children[0].material.size = newVal;
+        if (searchContainer.children.length > 0) {
+            searchContainer.children[0].material.size = newVal;
         }
     }
 
@@ -242,9 +260,9 @@ function loadPoints(generated_points) {
     function pointsOpacityInputHandler(newVal) {
         pointsOpacityInp.value = newVal;
         pointsOpacityVal.innerHTML = newVal;
-        points.material.opacity = newVal;
-        if (filterContainer.children.length > 0) {
-            filterContainer.children[0].material.opacity = newVal;
+        pointsContainer.children[0].material.opacity = newVal;
+        if (searchContainer.children.length > 0) {
+            searchContainer.children[0].material.opacity = newVal;
         }
     }
 
@@ -252,7 +270,7 @@ function loadPoints(generated_points) {
     pointsOpacityInp.addEventListener('input', event => pointsOpacityInputHandler(+event.target.value));
 
     function switchHideOthers(newVal) {
-        points.visible = !newVal;
+        pointsContainer.visible = !newVal;
         searchHideOthersInp.checked = newVal;
     }
 
@@ -262,60 +280,81 @@ function loadPoints(generated_points) {
 
     searchHideOthersInp.addEventListener('input', event => searchHideOthersInputHandler());
 
-    function searchInputHandler() {
-        newVal = searchInp.value;
-        if (newVal) {
-            filterContainer.remove(...filterContainer.children);
-            searchOpt = { fields: {} }
-            searchOpt.fields[searchFieldInp.value] = { bool: "AND" }
-            found = index.search(newVal, searchOpt);
-            if (found.length > 0) {
-                let geometry = new THREE.Geometry();
-                let colors = [];
-                let idxs = [];
-                for (let datum of found) {
-                    let idx = +datum.ref;
-                    let item = generated_points[idx];
-                    idxs.push(idx);
-                    geometry.vertices.push(
-                        new THREE.Vector3(
-                            item.position[0],
-                            item.position[1],
-                            0
-                        )
-                    );
-                    colors.push(new THREE.Color(getColor(item, true)))
+    function addSearchPoints() {
+        let searchQuery = searchInp.value;
+        searchContainer.remove(...searchContainer.children);
+        if (!searchQuery) {
+            return;
+        }
+        searchOpt = { fields: {} }
+        searchOpt.fields[searchFieldInp.value] = { bool: "AND" }
+        found = index.search(searchQuery, searchOpt);
+        if (found.length > 0) {
+            let geometry = new THREE.Geometry();
+            let colors = [];
+            let idxs = [];
+            for (let datum of found) {
+                let idx = +datum.ref;
+                let item = generated_points[idx];
+                if (!applyFilter(item)) {
+                    continue;
                 }
-                geometry.colors = colors;
-
-                let material = new THREE.PointsMaterial({
-                    size: pointsSizeInp.value,
-                    sizeAttenuation: false,
-                    vertexColors: THREE.VertexColors,
-                    map: circle_sprite,
-                    opacity: pointsOpacityInp.value,
-                    transparent: true
-                });
-
-                let pointsObj = new THREE.Points(geometry, material);
-                pointsObj.idxs = idxs;
-                filterContainer.add(pointsObj);
-                switchHideOthers(true);
+                idxs.push(idx);
+                geometry.vertices.push(
+                    new THREE.Vector3(
+                        item.position[0],
+                        item.position[1],
+                        0
+                    )
+                );
+                colors.push(new THREE.Color(getColor(item, true)))
             }
+            geometry.colors = colors;
+
+            let material = new THREE.PointsMaterial({
+                size: pointsSizeInp.value,
+                sizeAttenuation: false,
+                vertexColors: THREE.VertexColors,
+                map: circle_sprite,
+                opacity: pointsOpacityInp.value,
+                transparent: true
+            });
+
+            let pointsObj = new THREE.Points(geometry, material);
+            pointsObj.idxs = idxs;
+            searchContainer.add(pointsObj);
+        }
+    }
+
+    function searchInputHandler() {
+        let newVal = searchInp.value;
+        if (newVal) {
+            addSearchPoints();
+            switchHideOthers(true);
         } else {
             switchHideOthers(false);
-            filterContainer.remove(...filterContainer.children);
+            searchContainer.remove(...searchContainer.children);
         }
     }
 
     searchInp.addEventListener('input', event => searchInputHandler());
     searchFieldInp.addEventListener('input', event => searchInputHandler());
 
+    function filterInputHandler() {
+        let newVal = filterInp.value;
+        filterVal.innerHTML = newVal;
+        addPoints()
+        addSearchPoints()
+    }
+
+    filterInp.addEventListener('input', event => filterInputHandler());
+    filterFieldInp.addEventListener('input', event => filterInputHandler());
+
     function colorFilterResults() {
-        if (filterContainer.children.length == 0) {
+        if (searchContainer.children.length == 0) {
             return;
         }
-        let pointsObj = filterContainer.children[0];
+        let pointsObj = searchContainer.children[0];
 
         for (let i = 0; i < pointsObj.idxs.length; i++) {
             let idx = pointsObj.idxs[i];
@@ -329,11 +368,13 @@ function loadPoints(generated_points) {
 
     function updateColors() {
         colorFilterResults();
-        for (let i = 0; i < generated_points.length; i++) {
-            let color = new THREE.Color(getColor(generated_points[i], false));
-            pointsGeometry.colors[i] = color;
+        let points = pointsContainer.children[0]
+        for (let i = 0; i < points.idxs.length; i++) {
+            let idx = points.idxs[i];
+            let color = new THREE.Color(getColor(generated_points[idx], false));
+            points.geometry.colors[i] = color;
         }
-        pointsGeometry.colorsNeedUpdate = true;
+        points.geometry.colorsNeedUpdate = true;
     }
 
     colorFieldInp.addEventListener('input', event => updateColors());
@@ -383,10 +424,10 @@ function loadPoints(generated_points) {
         raycaster.setFromCamera(mouse_vector, camera);
         let pointsObj = null;
         let fromFilter = false;
-        if (points.visible == true) {
-            pointsObj = points;
+        if (pointsContainer.visible == true) {
+            pointsObj = pointsContainer.children[0];
         } else {
-            pointsObj = filterContainer.children[0];
+            pointsObj = searchContainer.children[0];
             fromFilter = true;
         }
         let intersects = raycaster.intersectObject(pointsObj);
