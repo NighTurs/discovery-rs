@@ -74,14 +74,14 @@ data/processed/ml/ds.csv: data/raw/ml-latest
 ml_train_model: fastai/models/ml_model.pth
 
 fastai/models/ml_model.pth: data/processed/ml/ds.csv
-	python -m scripts.movielens.train_rs \
+	python -m scripts.explicit.train_rs \
 		--input_dir data/processed/ml \
 		--model_name ml_model \
 		--lr 0.001 \
 		--wd 0.07 \
 		--epochs 30 \
 		--emb_size 500 \
-		--batch_movies 5000 \
+		--batch_items 5000 \
 		--mem_limit 20000000 \
 		--hide_pct 0.3 \
 		--w_hide_ratio 2.5
@@ -89,15 +89,21 @@ fastai/models/ml_model.pth: data/processed/ml/ds.csv
 ml_tsne_embedding: data/processed/ml/tsne_emb.csv
 
 data/processed/ml/tsne_emb.csv: fastai/models/ml_model.pth
-	python -m scripts.movielens.tsne_emb --model fastai/models/ml_model.pth --output_dir data/processed/ml
+	python -m scripts.tsne_emb \
+	--model fastai/models/ml_model.pth \
+	--layer_name emb.weight \
+	--perplexities 50 100 \
+	--lr 1000 \
+	--n_iter 1500 \
+	--output_dir data/processed/ml
 
 ml_rs_recommend: data/processed/ml/recommendations.pickle
 
 data/processed/ml/recommendations.pickle: fastai/models/ml_model.pth data/processed/ml/ds.csv
-	python -m scripts.movielens.rs_recommend \
+	python -m scripts.explicit.rs_recommend \
 	--input_dir data/processed/ml \
 	--model_path fastai/models/ml_model.pth \
-	--artist_list data/processed/ml/my_list.csv
+	--item_list data/processed/ml/my_list.csv
 
 ml_web_data: data/processed/ml/web.csv
 

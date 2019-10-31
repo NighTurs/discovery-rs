@@ -18,12 +18,11 @@ def process_raw(input_dir, output_dir, movie_users_threshold):
     print('Left movies:', len(ds['movieId'].unique()))
 
     u2i = {user: ind for ind, user in enumerate(ds['userId'].unique())}
-    m2i = {movie: ind for ind, movie in enumerate(ds['movieId'].unique())}
+    x2i = {movie: ind for ind, movie in enumerate(ds['movieId'].unique())}
 
     processed = pd.DataFrame({'user': ds['userId'].apply(lambda x: u2i[x]),
-                              'movie': ds['movieId'].apply(lambda x: m2i[x]),
-                              'rating': ds['rating'],
-                              'timestamp': ds['timestamp']})
+                              'item': ds['movieId'].apply(lambda x: x2i[x]),
+                              'rating': ds['rating']})
 
     if not path.exists(output_dir):
         os.makedirs(output_dir)
@@ -31,8 +30,8 @@ def process_raw(input_dir, output_dir, movie_users_threshold):
     with open(path.join(output_dir, 'u2i.pickle'), 'wb') as handle:
         pickle.dump(u2i, handle)
 
-    with open(path.join(output_dir, 'm2i.pickle'), 'wb') as handle:
-        pickle.dump(m2i, handle)
+    with open(path.join(output_dir, 'x2i.pickle'), 'wb') as handle:
+        pickle.dump(x2i, handle)
 
 
 def movie_user_count_filter(ds, artist_users_threshold):

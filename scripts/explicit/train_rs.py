@@ -29,27 +29,27 @@ class TrainDataset(Dataset):
         self.hide_pct = hide_pct
 
     def __getitem__(self, index):
-        x_movie = self.ds.iat[index, 0]  # movie_t
+        x_item = self.ds.iat[index, 0]  # item_t
         x_rating = self.ds.iat[index, 1]  # rating_t
-        valid_movie = self.ds.iat[index, 2]  # movie_v
-        if not isinstance(valid_movie, np.ndarray):
-            valid_movie = np.array([], dtype=np.int64)
+        valid_item = self.ds.iat[index, 2]  # item_v
+        if not isinstance(valid_item, np.ndarray):
+            valid_item = np.array([], dtype=np.int64)
 
-        all_len = len(x_movie)
+        all_len = len(x_item)
         hold_out = int(all_len * self.hide_pct)
         perm = np.random.permutation(all_len)
         y_w = np.full(all_len, self.w_rest, dtype=np.float32)
         if hold_out > 0:
             y_w[-hold_out:] = self.w_hide
 
-        return (x_movie[perm][:-hold_out] if hold_out > 0 else x_movie[perm],
+        return (x_item[perm][:-hold_out] if hold_out > 0 else x_item[perm],
                 x_rating[perm][:-hold_out] if hold_out > 0 else x_rating[perm],
                 np.ones(all_len - hold_out, dtype=np.float32),
-                x_movie[perm],
+                x_item[perm],
                 x_rating[perm],
                 y_w,
-                np.array([len(x_movie)], dtype=np.float32),
-                np.concatenate((x_movie, valid_movie)))
+                np.array([len(x_item)], dtype=np.float32),
+                np.concatenate((x_item, valid_item)))
 
     def __len__(self):
         return len(self.ds)
@@ -60,21 +60,21 @@ class ValidDataset(Dataset):
         self.ds = ds[~pd.isna(ds['rating_v'])]
 
     def __getitem__(self, index):
-        x_movie = self.ds.iat[index, 0]  # movie_t
+        x_item = self.ds.iat[index, 0]  # item_t
         x_rating = self.ds.iat[index, 1]  # rating_t
-        y_movie = self.ds.iat[index, 2]  # movie_v
+        y_item = self.ds.iat[index, 2]  # item_v
         y_rating = self.ds.iat[index, 3]  # rating_v
 
-        y_w = np.full(len(y_movie), 1, dtype=np.float32)
+        y_w = np.full(len(y_item), 1, dtype=np.float32)
 
-        return (x_movie,
+        return (x_item,
                 x_rating,
-                np.ones(len(x_movie), dtype=np.float32),
-                y_movie,
+                np.ones(len(x_item), dtype=np.float32),
+                y_item,
                 y_rating,
                 y_w,
-                np.array([len(y_movie)], dtype=np.float32),
-                np.concatenate((x_movie, y_movie)))
+                np.array([len(y_item)], dtype=np.float32),
+                np.concatenate((x_item, y_item)))
 
     def __len__(self):
         return len(self.ds)
@@ -105,33 +105,32 @@ def masked_softmax(x, mask):
     return z / ((z * mask).sum(-1)).unsqueeze(-1)
 
 
-class RecModel(nn.Module):
-    def __init__(self, nmovies, emb_size):
+class ExplicitRecModel(nn.Module):
+    def __init__(self, nitems, emb_size):
         super().__init__()
 
-        self.memb = nn.Embedding(nmovies, emb_size, padding_idx=nmovies - 1)
-        self.reset_parameters(self.memb.weight)
+        self.emb = nn.Embedding(nitems, emb_size, padding_idx=nitems - 1)
+        self.reset_parameters(self.emb.weight)
 
-        self.memb2 = nn.Embedding(nmovies, emb_size, padding_idx=nmovies - 1)
-        self.reset_parameters(self.memb2.weight)
+        self.emb2 = nn.Embedding(nitems, emb_size, padding_idx=nitems - 1)
+        self.reset_parameters(self.emb2.weight)
 
     def reset_parameters(self, weight):
         init.kaiming_uniform_(weight, a=math.sqrt(5))
 
     def forward(self, x_m, x_r, x_w, y_m, i_m):
-        x = self.memb(x_m)  # [batch, x_n_movies, emb_size]
-        y = self.memb(y_m)  # [batch, y_n_movies, emb_size]
-        y_i = self.memb(y_m)
-        implicit = torch.tanh(self.memb2(i_m).sum(1))  # [batch, emb_size]
-        y = y * implicit.unsqueeze(1)  # [batch, y_n_movies, emb_size]
-        z = y.bmm(x.permute(0, 2, 1))  # [batch, y_n_movies, x_n_movies]
-        # [batch, y_n_movies, x_n_movies]
+        x = self.emb(x_m)  # [batch, x_n_items, emb_size]
+        y = self.emb(y_m)  # [batch, y_n_items, emb_size]
+        y_i = self.emb(y_m)
+        implicit = torch.tanh(self.emb2(i_m).sum(1))  # [batch, emb_size]
+        y = y * implicit.unsqueeze(1)  # [batch, y_n_items, emb_size]
+        z = y.bmm(x.permute(0, 2, 1))  # [batch, y_n_items, x_n_items]
         z = masked_softmax(z, x_w.unsqueeze(1))
-        return (z * x_r.unsqueeze(1)).sum(-1)  # [batch, y_n_movies]
+        return (z * x_r.unsqueeze(1)).sum(-1)  # [batch, y_n_items]
 
 
-def my_loss(out, y_r, y_w, y_ct, batch_movies):
-    return (nn.functional.mse_loss(out, y_r, reduction='none') * y_w).sum() / batch_movies
+def my_loss(out, y_r, y_w, y_ct, batch_items):
+    return (nn.functional.mse_loss(out, y_r, reduction='none') * y_w).sum() / batch_items
 
 
 class CorrectRMSEMetric(Callback):
@@ -153,7 +152,7 @@ class CorrectRMSEMetric(Callback):
 
 
 class DynamicBatchSampler(Sampler):
-    def __init__(self, ds, hide_pct, batch_movies, mem_limit, valid=False):
+    def __init__(self, ds, hide_pct, batch_items, mem_limit, valid=False):
         self.x_len = ds.ds['rating_t'].apply(lambda x: len(x))
         self.y_len = ds.ds['rating_v'].apply(
             lambda x: len(x) if isinstance(x, np.ndarray) else 0)
@@ -163,10 +162,10 @@ class DynamicBatchSampler(Sampler):
                 self.x_len, key=lambda x: self.x_len.iloc[x])
         else:
             self.sampler = SortishSampler(self.x_len, key=lambda x: self.x_len.iloc[x],
-                                          bs=len(self.x_len) // (sum(self.x_len) // batch_movies))
+                                          bs=len(self.x_len) // (sum(self.x_len) // batch_items))
 
         self.hide_pct = hide_pct
-        self.batch_movies = batch_movies
+        self.batch_items = batch_items
         self.mem_limit = mem_limit
         self.valid = valid
         self.estim_len = None
@@ -205,7 +204,7 @@ class DynamicBatchSampler(Sampler):
                 batch_y_max = y_len
             else:
                 batch.append(idx)
-            if batch_sum >= self.batch_movies:
+            if batch_sum >= self.batch_items:
                 yield batch
                 batch = []
                 batch_sum = 0
@@ -223,69 +222,69 @@ class DynamicBatchSampler(Sampler):
         return self.estim_len
 
 
-def train_rs(input_dir, model_name, lr, wd, epochs, emb_size, batch_movies, mem_limit, hide_pct, w_hide_ratio):
+def train_rs(input_dir, model_name, lr, wd, epochs, emb_size, batch_items, mem_limit, hide_pct, w_hide_ratio):
     print('Reading data...')
     ds = pd.read_csv(path.join(input_dir, 'ds.csv'))
     ds['rating'] = ds['rating'].astype('float32')
-    with open(path.join(input_dir, 'm2i.pickle'), 'rb') as handle:
-        m2i = pickle.load(handle)
+    with open(path.join(input_dir, 'x2i.pickle'), 'rb') as handle:
+        x2i = pickle.load(handle)
     print('Test train split...')
     train, valid = train_test_split(ds)
     print('Unbiasing...')
-    train, valid, bias = unbias(train, valid, len(m2i))
+    train, valid, bias = unbias(train, valid, len(x2i))
     with open(path.join(input_dir, 'bias.pickle'), 'wb') as handle:
         pickle.dump(bias, handle)
     print('Grouping dataset by user')
     groups_t, groups_v = train.groupby('user'), valid.groupby('user')
-    movies_t, movies_v = groups_t['movie'].apply(
-        np.array), groups_v['movie'].apply(np.array)
+    items_t, items_v = groups_t['item'].apply(
+        np.array), groups_v['item'].apply(np.array)
     ratings_t, ratings_v = groups_t['rating'].apply(
         np.array), groups_v['rating'].apply(np.array)
-    ds = pd.concat([movies_t, ratings_t, movies_v, ratings_v], axis=1)
-    ds.columns = ['movie_t', 'rating_t', 'movie_v', 'rating_v']
+    ds = pd.concat([items_t, ratings_t, items_v, ratings_v], axis=1)
+    ds.columns = ['item_t', 'rating_t', 'item_v', 'rating_v']
     ds = ds[~pd.isna(ds['rating_t'])]
-    del movies_t, movies_v, ratings_t, ratings_v
+    del items_t, items_v, ratings_t, ratings_v
     print('Training model...')
     train_d = TrainDataset(ds, hide_pct=hide_pct, w_hide_ratio=w_hide_ratio)
     valid_d = ValidDataset(ds)
     train_b_samp = DynamicBatchSampler(
-        train_d, hide_pct, batch_movies, mem_limit)
+        train_d, hide_pct, batch_items, mem_limit)
     valid_b_samp = DynamicBatchSampler(
-        valid_d, hide_pct, batch_movies, mem_limit, valid=True)
+        valid_d, hide_pct, batch_items, mem_limit, valid=True)
     train_l = DataLoader(train_d,
                          batch_sampler=train_b_samp,
                          num_workers=0,
-                         collate_fn=lambda x: my_collate(x, len(m2i)),
+                         collate_fn=lambda x: my_collate(x, len(x2i)),
                          pin_memory=True,
                          worker_init_fn=lambda x: np.random.seed(random.randint(0, 100) + x))
     valid_l = DataLoader(valid_d,
                          batch_sampler=valid_b_samp,
                          num_workers=0,
                          pin_memory=True,
-                         collate_fn=lambda x: my_collate(x, len(m2i)))
+                         collate_fn=lambda x: my_collate(x, len(x2i)))
     data = DataBunch(train_l, valid_l, path='fastai',
-                     collate_fn=lambda x: my_collate(x, len(m2i)))
-    model = RecModel(nmovies=len(m2i) + 1, emb_size=emb_size)
+                     collate_fn=lambda x: my_collate(x, len(x2i)))
+    model = ExplicitRecModel(nitems=len(x2i) + 1, emb_size=emb_size)
 
-    learner = Learner(data, model, loss_func=lambda *xarg: my_loss(*xarg, batch_movies=batch_movies), wd=wd,
+    learner = Learner(data, model, loss_func=lambda *xarg: my_loss(*xarg, batch_items=batch_items), wd=wd,
                       metrics=[CorrectRMSEMetric(1)])
     learner.fit_one_cycle(epochs, max_lr=lr, div_factor=10)
 
     learner.save(model_name)
 
 
-def unbias(train, valid, nmovies):
-    mean_movie = train.groupby('movie')['rating'].mean()
-    bias = np.zeros(nmovies, dtype=np.float32)
-    bias[mean_movie.index.values] = mean_movie
+def unbias(train, valid, nitems):
+    mean_item = train.groupby('item')['rating'].mean()
+    bias = np.zeros(nitems, dtype=np.float32)
+    bias[mean_item.index.values] = mean_item
     bias = torch.tensor(bias)
     
-    train = train.merge(mean_movie.to_frame(), on='movie',
-                        suffixes=('', '_mean_movie'))
-    train['rating'] = train['rating'] - train['rating_mean_movie']
-    valid = valid.merge((mean_movie).to_frame(), on='movie',
-                        suffixes=('', '_mean_movie'))
-    valid['rating'] = valid['rating'] - valid['rating_mean_movie']
+    train = train.merge(mean_item.to_frame(), on='item',
+                        suffixes=('', '_mean_item'))
+    train['rating'] = train['rating'] - train['rating_mean_item']
+    valid = valid.merge((mean_item).to_frame(), on='item',
+                        suffixes=('', '_mean_item'))
+    valid['rating'] = valid['rating'] - valid['rating_mean_item']
     return train, valid, bias
 
 
@@ -312,8 +311,8 @@ if __name__ == '__main__':
                         help='Number of epochs')
     parser.add_argument('--emb_size', type=int, required=True,
                         help='Embedding size')
-    parser.add_argument('--batch_movies', type=int, required=True,
-                        help='Movies per batch')
+    parser.add_argument('--batch_items', type=int, required=True,
+                        help='Items per batch')
     parser.add_argument('--mem_limit', type=float, required=True,
                         help='Limit on biggest matrix size during training')
     parser.add_argument('--hide_pct', type=float, required=True,
@@ -323,4 +322,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     train_rs(args.input_dir, args.model_name, args.lr,
-             args.wd, args.epochs, args.emb_size, args.batch_movies, args.mem_limit, args.hide_pct, args.w_hide_ratio)
+             args.wd, args.epochs, args.emb_size, args.batch_items, args.mem_limit, args.hide_pct, args.w_hide_ratio)
