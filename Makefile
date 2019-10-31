@@ -113,3 +113,10 @@ ml_web_archive: web/data/ml.zip
 
 web/data/ml.zip: data/processed/ml/web.csv data/processed/ml/web_index.json
 	(cd -- data/processed/ml && zip ml.zip web.csv web_index.json) && cp data/processed/ml/ml.zip web/data/
+
+# Goodbooks 10k
+
+gb_raw: data/raw/goodbooks-10k
+
+data/raw/goodbooks-10k:
+	(cd data/raw && wget https://github.com/zygmuntz/goodbooks-10k/releases/download/v1.0/goodbooks-10k.zip && unzip goodbooks-10k.zip -d goodbooks-10k)
