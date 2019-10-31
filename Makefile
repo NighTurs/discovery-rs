@@ -92,7 +92,7 @@ data/processed/ml/tsne_emb.csv: fastai/models/ml_model.pth
 	python -m scripts.tsne_emb \
 	--model fastai/models/ml_model.pth \
 	--layer_name emb.weight \
-	--perplexities 50 100 \
+	--perplexities 50 500 \
 	--lr 1000 \
 	--n_iter 1500 \
 	--output_dir data/processed/ml
@@ -122,7 +122,62 @@ web/data/ml.zip: data/processed/ml/web.csv data/processed/ml/web_index.json
 
 # Goodbooks 10k
 
-gb_raw: data/raw/goodbooks-10k
+gbook_raw: data/raw/goodbooks-10k
 
 data/raw/goodbooks-10k:
 	(cd data/raw && wget https://github.com/zygmuntz/goodbooks-10k/releases/download/v1.0/goodbooks-10k.zip && unzip goodbooks-10k.zip -d goodbooks-10k)
+
+gbook_processed: data/processed/gbook/ds.csv
+
+data/processed/gbook/ds.csv: data/raw/goodbooks-10k
+	python -m scripts.goodbooks.process_raw --input_dir data/raw/goodbooks-10k --output_dir data/processed/gbook \
+		--book_users_threshold 15
+
+gbook_train_model: fastai/models/gbook_model.pth
+
+fastai/models/gbook_model.pth: data/processed/gbook/ds.csv
+	python -m scripts.explicit.train_rs \
+		--input_dir data/processed/gbook \
+		--model_name gbook_model \
+		--lr 0.001 \
+		--wd 0.1 \
+		--epochs 20 \
+		--emb_size 500 \
+		--batch_items 5000 \
+		--mem_limit 20000000 \
+		--hide_pct 0.3 \
+		--w_hide_ratio 2.5
+
+gbook_tsne_embedding: data/processed/gbook/tsne_emb.csv
+
+data/processed/gbook/tsne_emb.csv: fastai/models/gbook_model.pth
+	python -m scripts.tsne_emb \
+	--model fastai/models/gbook_model.pth \
+	--layer_name emb.weight \
+	--perplexities 20 200 \
+	--lr 1000 \
+	--n_iter 1500 \
+	--output_dir data/processed/gbook
+
+gbook_rs_recommend: data/processed/gbook/recommendations.pickle
+
+data/processed/gbook/recommendations.pickle: fastai/models/gbook_model.pth data/processed/gbook/ds.csv
+	python -m scripts.explicit.rs_recommend \
+	--input_dir data/processed/gbook \
+	--model_path fastai/models/gbook_model.pth \
+	--item_list data/processed/gbook/my_list.csv
+
+gbook_web_data: data/processed/gbook/web.csv
+
+data/processed/gbook/web.csv: data/processed/gbook/tsne_emb.csv data/processed/gbook/recommendations.pickle
+	python -m scripts.goodbooks.assemble_web_data --raw_dir data/raw/goodbooks-10k --processed_dir data/processed/gbook
+
+gbook_elasticlunr_index: data/processed/gbook/web_index.json
+
+data/processed/gbook/web_index.json: data/processed/gbook/web.csv
+	node scripts/indexer.js data/processed/gbook
+
+gbook_web_archive: web/data/gbook.zip
+
+web/data/gbook.zip: data/processed/gbook/web.csv data/processed/gbook/web_index.json
+	(cd -- data/processed/gbook && zip gbook.zip web.csv web_index.json) && cp data/processed/gbook/gbook.zip web/data/
