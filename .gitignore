@@ -6,7 +6,8 @@ data/processed/lastfm/*
 !data/processed/lastfm/my_list.txt
 web/data/*
 node_modules
-fastai
+models/*
+!models/.gitkeep
 
 *.pyc
 *.pyo

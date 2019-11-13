@@ -69,29 +69,28 @@ ml_processed: data/processed/ml/ds.csv
 
 data/processed/ml/ds.csv: data/raw/ml-latest
 	python -m scripts.movielens.process_raw --input_dir data/raw/ml-latest --output_dir data/processed/ml \
-		--movie_users_threshold 15
+		--movie_users_threshold 5 --user_movies_threshold 5
 
-ml_train_model: fastai/models/ml_model.pth
+ml_train_model: models/ml_epoch_100.model
 
-fastai/models/ml_model.pth: data/processed/ml/ds.csv
-	python -m scripts.explicit.train_rs \
+models/ml_epoch_100.model: data/processed/ml/ds.csv
+	python -m scripts.train_rs \
 		--input_dir data/processed/ml \
-		--model_name ml_model \
-		--lr 0.001 \
-		--wd 0.07 \
-		--epochs 30 \
-		--emb_size 500 \
-		--batch_items 5000 \
-		--mem_limit 20000000 \
-		--hide_pct 0.3 \
-		--w_hide_ratio 2.5
+		--model_path models/ml \
+		--lr 1e-3 \
+		--lr_milestones 60 80 \
+		--wd 2e-5 \
+		--epochs 100 \
+		--emb_size 200 \
+		--batch_size 500 \
+		--wo_eval
 
 ml_tsne_embedding: data/processed/ml/tsne_emb.csv
 
-data/processed/ml/tsne_emb.csv: fastai/models/ml_model.pth
+data/processed/ml/tsne_emb.csv: models/ml_epoch_100.model
 	python -m scripts.tsne_emb \
-	--model fastai/models/ml_model.pth \
-	--layer_name emb.weight \
+	--model models/ml_epoch_100.model \
+	--layer_name de_embedding_layer.weight \
 	--perplexities 50 500 \
 	--lr 1000 \
 	--n_iter 1500 \
@@ -99,16 +98,18 @@ data/processed/ml/tsne_emb.csv: fastai/models/ml_model.pth
 
 ml_rs_recommend: data/processed/ml/recommendations.pickle
 
-data/processed/ml/recommendations.pickle: fastai/models/ml_model.pth data/processed/ml/ds.csv
-	python -m scripts.explicit.rs_recommend \
+data/processed/ml/recommendations.pickle: models/ml_epoch_100.model data/processed/ml/ds.csv
+	python -m scripts.rs_recommend \
 	--input_dir data/processed/ml \
-	--model_path fastai/models/ml_model.pth \
+	--model_path models/ml_epoch_100.model \
 	--item_list data/processed/ml/my_list.csv
 
 ml_web_data: data/processed/ml/web.csv
 
 data/processed/ml/web.csv: data/processed/ml/tsne_emb.csv data/processed/ml/recommendations.pickle
-	python -m scripts.movielens.assemble_web_data --raw_dir data/raw/ml-latest --processed_dir data/processed/ml
+	python -m scripts.movielens.assemble_web_data \
+	--raw_dir data/raw/ml-latest \
+	--processed_dir data/processed/ml
 
 ml_elasticlunr_index: data/processed/ml/web_index.json
 
