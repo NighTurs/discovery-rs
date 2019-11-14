@@ -28,19 +28,20 @@ def process_raw(input, output_dir, playcount_threshold, user_artists_threshold, 
     u2i = {u: i for i, u in enumerate(ds['user'].drop_duplicates())}
     a2i = {(a.artist_name, a.artist_mbid): i for i, a in enumerate(
         ds.drop_duplicates(subset=['artist_name', 'artist_mbid']).itertuples())}
+    x2i = {k[0]: v for k, v in a2i.items()}
 
     ua = pd.DataFrame({'user': [u2i[x] for x in ds['user']],
-                       'artist': [a2i[(x.artist_name, x.artist_mbid)] for x in ds[['artist_name', 'artist_mbid']].itertuples()],
-                       'playcount': ds['playcount']})
+                       'item': [a2i[(x.artist_name, x.artist_mbid)] for x in ds[['artist_name', 'artist_mbid']].itertuples()]})
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     ua.to_csv(os.path.join(output_dir, 'ds.csv'), index=False)
     with open(os.path.join(output_dir, 'u2i.pickle'), 'wb') as handle:
         pickle.dump(u2i, handle)
-
     with open(os.path.join(output_dir, 'a2i.pickle'), 'wb') as handle:
         pickle.dump(a2i, handle)
+    with open(os.path.join(output_dir, 'x2i.pickle'), 'wb') as handle:
+        pickle.dump(x2i, handle)
 
 
 def user_artists_count_filter(ds, user_artists_threshold):

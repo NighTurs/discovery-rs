@@ -23,3 +23,9 @@ def count_filter(ds, threshold, col, col_ct):
     ct = ds.groupby(col)[col_ct].count()
     keep = ct[ct >= threshold].index.values
     return ds[ds[col].isin(keep)]
+
+
+def percentile(series):
+    d = {k: v / len(series)
+         for v, k in enumerate(series.sort_values().index.values)}
+    return [d[i] for i in series.index.values]

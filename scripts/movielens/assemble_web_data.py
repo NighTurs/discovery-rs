@@ -2,6 +2,7 @@ import argparse
 import pickle
 import pandas as pd
 from os import path
+from ..utils import percentile
 
 
 def assemble_web_data(raw_dir, processed_dir):
@@ -52,12 +53,6 @@ def assemble_web_data(raw_dir, processed_dir):
                         'imdb_id': [movies[i2x[i]][2] for i in range(nmovies)]})
     web.to_csv(path.join(processed_dir, 'web.csv'),
                index=False, float_format='%.5f')
-
-
-def percentile(series):
-    d = {k: v / len(series)
-         for v, k in enumerate(series.sort_values().index.values)}
-    return [d[i] for i in series.index.values]
 
 
 if __name__ == '__main__':

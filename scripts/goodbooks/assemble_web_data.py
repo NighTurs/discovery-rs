@@ -2,6 +2,7 @@ import argparse
 import pickle
 import pandas as pd
 from os import path
+from ..utils import percentile
 
 
 def assemble_web_data(raw_dir, processed_dir):
@@ -15,7 +16,8 @@ def assemble_web_data(raw_dir, processed_dir):
     tags = pd.read_csv(path.join(raw_dir, 'tags.csv'))
     book_tags = pd.read_csv(path.join(raw_dir, 'book_tags.csv'))
     tags = book_tags.merge(tags, on='tag_id')
-    exclude_tags = set(['to-read', 'currently-reading', 'owned', 'books-i-own'])
+    exclude_tags = set(
+        ['to-read', 'currently-reading', 'owned', 'books-i-own'])
     tags = tags.groupby('goodreads_book_id').apply(lambda x: ', '.join(
         [y.tag_name for y in x.sort_values('count', ascending=False).iloc[:15, :].itertuples() if y.tag_name not in exclude_tags]))
 
@@ -43,12 +45,6 @@ def assemble_web_data(raw_dir, processed_dir):
                         'goodreads_id': [books[i2x[i]][4] for i in range(nbooks)]})
     web.to_csv(path.join(processed_dir, 'web.csv'),
                index=False, float_format='%.5f')
-
-
-def percentile(series):
-    d = {k: v / len(series)
-         for v, k in enumerate(series.sort_values().index.values)}
-    return [d[i] for i in series.index.values]
 
 
 if __name__ == '__main__':

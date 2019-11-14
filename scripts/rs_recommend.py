@@ -12,18 +12,19 @@ from os import path
 def rs_recommend(input_dir, model_path, item_list):
     with open(path.join(input_dir, 'x2i.pickle'), 'rb') as handle:
         x2i = pickle.load(handle)
-    interactions = load_item_list(x2i, item_list)
 
     model = DynamicAutoencoder()
     recoder = Recoder(model)
     recoder.init_from_model_file(model_path)
+
+    interactions = load_item_list(x2i, recoder.num_items, item_list)
 
     out = recoder.predict(interactions)
     with open(path.join(input_dir, 'recommendations.pickle'), 'wb') as handle:
         pickle.dump(out[0].detach().squeeze(0).numpy(), handle)
 
 
-def load_item_list(x2i, item_list):
+def load_item_list(x2i, nitems, item_list):
     items = pd.read_csv(item_list)
     ids = []
     for raw in items['raw_id']:
@@ -32,7 +33,7 @@ def load_item_list(x2i, item_list):
         else:
             print('Id {} not found'.format(raw))
     csr_matrix = coo_matrix((np.ones(len(ids)), (np.zeros(
-        len(ids)), np.array(ids))), shape=(1, len(x2i))).tocsr()
+        len(ids)), np.array(ids))), shape=(1, nitems)).tocsr()
 
     return UsersInteractions(np.array([0]), csr_matrix)
 

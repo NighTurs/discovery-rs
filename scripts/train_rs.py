@@ -53,21 +53,21 @@ def train_rs(input_dir, model_path, lr, lr_milestones, wd, epochs, emb_size, bat
     print('Training model...')
 
     model = DynamicAutoencoder(hidden_layers=[emb_size], activation_type='tanh',
-                               noise_prob=0.5, sparse=False)
+                            noise_prob=0.5, sparse=False)
 
     trainer = Recoder(model=model, use_cuda=use_cuda, optimizer_type='adam',
-                      loss='logistic', user_based=False)
+                    loss='logistic', user_based=False)
 
     metrics = [Recall(k=20, normalize=True), Recall(k=50, normalize=True),
-               NDCG(k=100)]
+            NDCG(k=100)]
 
     trainer.train(train_dataset=train_dataset, val_dataset=valid_dataset,
-                  batch_size=batch_size, lr=lr, weight_decay=wd,
-                  num_epochs=epochs, negative_sampling=True,
-                  lr_milestones=lr_milestones, num_data_workers=mp.cpu_count(),
-                  model_checkpoint_prefix=model_path,
-                  checkpoint_freq=10, eval_num_recommendations=100,
-                  metrics=metrics, eval_freq=10)
+                batch_size=batch_size, lr=lr, weight_decay=wd,
+                num_epochs=epochs, negative_sampling=True,
+                lr_milestones=lr_milestones, num_data_workers=mp.cpu_count(),
+                model_checkpoint_prefix=model_path,
+                checkpoint_freq=10, eval_num_recommendations=100,
+                metrics=metrics, eval_freq=2)
     trainer.save_state(model_path)
 
 

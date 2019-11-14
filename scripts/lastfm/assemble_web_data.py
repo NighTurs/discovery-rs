@@ -2,6 +2,7 @@ import argparse
 import pickle
 import pandas as pd
 from os import path
+from ..utils import percentile
 
 
 def assemble_web_data(input_dir):
@@ -13,7 +14,7 @@ def assemble_web_data(input_dir):
     with open(path.join(input_dir, 'musicbrainz.pickle'), 'rb') as handle:
         musicbrainz = pickle.load(handle)
     ds = pd.read_csv(path.join(input_dir, 'ds.csv'))
-    listeners = ds.groupby('artist')['user'].count()
+    listeners = ds.groupby('item')['user'].count()
     listeners_pct = percentile(listeners)
 
     i2a = {v: k for k, v in a2i.items()}
@@ -26,17 +27,12 @@ def assemble_web_data(input_dir):
                         't_country': [musicbrainz[i]['country'] for i in range(nartists)],
                         'founded': [musicbrainz[i]['founded'] for i in range(nartists)],
                         'dissolved': [musicbrainz[i]['dissolved'] for i in range(nartists)],
-                        'n_pct_recommend': recommendations,
+                        'recommend_value': recommendations,
+                        'n_pct_recommend': percentile(pd.Series(recommendations)),
                         'listeners': listeners,
                         'n_listeners_pct': listeners_pct})
     web.to_csv(path.join(input_dir, 'web.csv'),
                index=False, float_format='%.5f')
-
-
-def percentile(series):
-    d = {k: v / len(series)
-         for v, k in enumerate(series.sort_values().index.values)}
-    return [d[i] for i in series.index.values]
 
 
 if __name__ == '__main__':
