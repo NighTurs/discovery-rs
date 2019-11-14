@@ -132,29 +132,28 @@ gbook_processed: data/processed/gbook/ds.csv
 
 data/processed/gbook/ds.csv: data/raw/goodbooks-10k
 	python -m scripts.goodbooks.process_raw --input_dir data/raw/goodbooks-10k --output_dir data/processed/gbook \
-		--book_users_threshold 15
+		--book_users_threshold 5 --user_books_threshold 5
 
-gbook_train_model: fastai/models/gbook_model.pth
+gbook_train_model: models/gbook_epoch_100.model
 
-fastai/models/gbook_model.pth: data/processed/gbook/ds.csv
-	python -m scripts.explicit.train_rs \
+models/gbook_epoch_100.model: data/processed/gbook/ds.csv
+	python -m scripts.train_rs \
 		--input_dir data/processed/gbook \
-		--model_name gbook_model \
-		--lr 0.001 \
-		--wd 0.1 \
-		--epochs 20 \
-		--emb_size 500 \
-		--batch_items 5000 \
-		--mem_limit 20000000 \
-		--hide_pct 0.3 \
-		--w_hide_ratio 2.5
+		--model_path models/gbook \
+		--lr 1e-3 \
+		--lr_milestones 60 80 \
+		--wd 2e-5 \
+		--epochs 100 \
+		--emb_size 200 \
+		--batch_size 500 \
+		--wo_eval
 
 gbook_tsne_embedding: data/processed/gbook/tsne_emb.csv
 
-data/processed/gbook/tsne_emb.csv: fastai/models/gbook_model.pth
+data/processed/gbook/tsne_emb.csv: models/gbook_epoch_100.model
 	python -m scripts.tsne_emb \
-	--model fastai/models/gbook_model.pth \
-	--layer_name emb.weight \
+	--model models/gbook_epoch_100.model \
+	--layer_name de_embedding_layer.weight \
 	--perplexities 20 200 \
 	--lr 1000 \
 	--n_iter 1500 \
@@ -162,10 +161,10 @@ data/processed/gbook/tsne_emb.csv: fastai/models/gbook_model.pth
 
 gbook_rs_recommend: data/processed/gbook/recommendations.pickle
 
-data/processed/gbook/recommendations.pickle: fastai/models/gbook_model.pth data/processed/gbook/ds.csv
-	python -m scripts.explicit.rs_recommend \
+data/processed/gbook/recommendations.pickle: models/gbook_epoch_100.model data/processed/gbook/ds.csv
+	python -m scripts.rs_recommend \
 	--input_dir data/processed/gbook \
-	--model_path fastai/models/gbook_model.pth \
+	--model_path models/gbook_epoch_100.model \
 	--item_list data/processed/gbook/my_list.csv
 
 gbook_web_data: data/processed/gbook/web.csv

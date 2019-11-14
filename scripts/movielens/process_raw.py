@@ -3,6 +3,7 @@ import pickle
 import pandas as pd
 import os
 from os import path
+from ..utils import keep_positive_ratings, count_filter
 
 
 def process_raw(input_dir, output_dir, movie_users_threshold, user_movies_threshold):
@@ -11,9 +12,9 @@ def process_raw(input_dir, output_dir, movie_users_threshold, user_movies_thresh
     print('Overall users:', len(ds['userId'].unique()))
     print('Overall movies:', len(ds['movieId'].unique()))
 
-    ds = keep_positive_ratings(ds)
-    ds = movie_user_count_filter(ds, movie_users_threshold)
-    ds = user_movie_count_filter(ds, user_movies_threshold)
+    ds = keep_positive_ratings(ds, 'userId', 'movieId', 'rating')
+    ds = count_filter(ds, movie_users_threshold, 'movieId', 'userId')
+    ds = count_filter(ds, user_movies_threshold, 'userId', 'movieId')
 
     print('Left records:', ds.shape[0])
     print('Left users:', len(ds['userId'].unique()))
@@ -33,36 +34,6 @@ def process_raw(input_dir, output_dir, movie_users_threshold, user_movies_thresh
 
     with open(path.join(output_dir, 'x2i.pickle'), 'wb') as handle:
         pickle.dump(x2i, handle)
-
-
-def keep_positive_ratings(ds, pct_cutoff=0.1):
-    ulen = {row.userId: row.movieId for row in ds.groupby(
-        'userId')['movieId'].count().reset_index().itertuples()}
-    res = ds[ds['rating'] == 5.0]
-    ulenct = {row.userId: row.movieId for row in res.groupby(
-        'userId')['movieId'].count().reset_index().itertuples()}
-    for rating in reversed(range(8, 10)):
-        r = rating / 2
-        chunks = []
-        for user, group in ds[ds['rating'] == r].groupby('userId'):
-            if ulenct.get(user, 0) < ulen[user] * pct_cutoff:
-                chunks.append(group)
-                ulenct[user] = ulenct.get(user, 0) + group.shape[0]
-        res = pd.concat(chunks + [res])
-        del chunks
-    return res
-
-
-def movie_user_count_filter(ds, artist_users_threshold):
-    ct = ds.groupby('movieId')['userId'].count()
-    keep_movies = ct[ct >= artist_users_threshold].index.values
-    return ds[ds['movieId'].isin(keep_movies)]
-
-
-def user_movie_count_filter(ds, user_artist_threshold):
-    ct = ds.groupby('userId')['movieId'].count()
-    keep_users = ct[ct >= user_artist_threshold].index.values
-    return ds[ds['userId'].isin(keep_users)]
 
 
 if __name__ == '__main__':
