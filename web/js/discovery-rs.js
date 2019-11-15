@@ -4,6 +4,9 @@ const pointsSizeVal = document.querySelector('#points-size-value');
 const pointsOpacityInp = document.querySelector('#points-opacity');
 const pointsOpacityVal = document.querySelector('#points-opacity-value');
 
+const colorBalanceInp = document.querySelector('#color-balance'); 
+const colorBalanceVal = document.querySelector('#color-balance-value'); 
+
 const filterInp = document.querySelector('#filter-range');
 const filterVal = document.querySelector('#filter-value');
 
@@ -23,6 +26,8 @@ const findingsColor = '#28aefc'
 
 filterInp.value = 0
 filterVal.innerHTML = 0
+colorBalanceInp.value = 0.5
+colorBalanceVal.innerHTML = 0.5
 
 let width = window.innerWidth;
 let viz_width = width;
@@ -183,7 +188,14 @@ function loadPoints(generated_points) {
     }
 
     function colorFromPct(v) {
-        return d3.interpolateOranges(1 - v);
+        let balance = colorBalanceInp.value;
+        let p = 0;
+        if (v >= balance) {
+            p = 1 - balance;
+        } else {
+            p = balance;
+        }
+        return d3.interpolateOranges(1 - (0.5 + (v - balance) * 0.5 / p));
     }
 
     function getColor(point, fromFilter) {
@@ -381,6 +393,14 @@ function loadPoints(generated_points) {
     }
 
     colorFieldInp.addEventListener('input', event => updateColors());
+
+    function colorBalanceInputHandler() {
+        let newVal = colorBalanceInp.value;
+        colorBalanceVal.innerHTML = newVal;
+        updateColors();
+    }
+
+    colorBalanceInp.addEventListener('input', event => colorBalanceInputHandler());
 
     // Hover and tooltip interaction
 
