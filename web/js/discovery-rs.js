@@ -21,6 +21,9 @@ const initPointsOpacity = 1.0
 
 const findingsColor = '#28aefc'
 
+filterInp.value = 0
+filterVal.innerHTML = 0
+
 let width = window.innerWidth;
 let viz_width = width;
 let height = window.innerHeight;
