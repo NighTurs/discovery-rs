@@ -223,11 +223,11 @@ function loadPoints(generated_points) {
         pointsGeometry.colors = colors;
 
         let pointsMaterial = new THREE.PointsMaterial({
-            size: initPointsSize,
+            size: pointsSizeInp.value,
             sizeAttenuation: false,
             vertexColors: THREE.VertexColors,
             map: circle_sprite,
-            opacity: 1,
+            opacity: pointsOpacityInp.value,
             transparent: true
         });
 
