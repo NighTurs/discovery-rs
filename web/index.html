@@ -18,7 +18,7 @@
     <div id="toolbar" class="flex-c flex-v">
         <h2 id="title">Discovery-RS</h2>
         <fieldset>
-            <legend>Point</legend>
+            <legend>Points</legend>
             <div class="flex-a-c control">
                 <span class="label">Dataset</span>
                 <select id="dataset-field">
@@ -41,14 +41,18 @@
                 </div>
                 <input id="points-opacity" type="range" min="0.05" max="1" step="0.05" value="1">
             </div>
+            
+        </fieldset>
+        <fieldset>
+            <legend>Color</legend>
             <div class="flex-a-c control">
-                <span class="label">Color</span>
+                <span class="label">Field</span>
                 <select id="color-field">
                 </select>
             </div>
             <div class="flex-c flex-v control">
                 <div class="flex-a-c no-select">
-                    <span class="label">Color Balance</span>
+                    <span class="label">Balance</span>
                     <span id="color-balance-value" class="value">0.5</span>
                 </div>
                 <input id="color-balance" type="range" min="0" max="1" step="0.01" value="0.5">
