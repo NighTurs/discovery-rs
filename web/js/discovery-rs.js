@@ -97,12 +97,12 @@ function toRadians(angle) {
     return angle * (Math.PI / 180);
 }
 
-JSZipUtils.getBinaryContent('data/data.zip', function (err, data) {
+JSZipUtils.getBinaryContent('data/lastfm.zip', function (err, data) {
     if (err) {
         throw err;
     }
     JSZip.loadAsync(data).then(function (zip) {
-        zip.file("ds.csv").async("string").then(function (ds_csv) {
+        zip.file("web.csv").async("string").then(function (ds_csv) {
             let generated_points = d3.csvParse(ds_csv, function (d) {
                 d.idx = +d.idx;
                 d.position = [+d.x, +d.y];
@@ -117,7 +117,7 @@ JSZipUtils.getBinaryContent('data/data.zip', function (err, data) {
             });
             loadPoints(generated_points);
         });
-        zip.file("ds_index.json").async("string").then(function (index_str) {
+        zip.file("web_index.json").async("string").then(function (index_str) {
             loadIndex(JSON.parse(index_str))
         });
     });

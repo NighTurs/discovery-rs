@@ -40,4 +40,19 @@ data/processed/lastfm/recommendations.pickle: fastai/models/model.pth data/proce
 	--input_dir data/processed/lastfm \
 	--model_path fastai/models/model.pth \
 	--artist_list data/processed/lastfm/my_list.txt
+
+web_data: data/processed/lastfm/web.csv
+
+data/processed/lastfm/web.csv: data/processed/lastfm/ds.csv data/processed/lastfm/tsne_emb.csv data/processed/lastfm/musicbrainz.pickle data/processed/lastfm/recommendations.pickle
+	python -m scripts.lastfm.assemble_web_data --input_dir data/processed/lastfm
+
+elasticlunr_index: data/processed/lastfm/web_index.json
+
+data/processed/lastfm/web_index.json: data/processed/lastfm/web.csv
+	node scripts/indexer.js
+
+lastfm_web_archive: web/data/lastfm.zip
+
+web/data/lastfm.zip: data/processed/lastfm/web.csv data/processed/lastfm/web_index.json
+	(cd -- data/processed/lastfm && zip lastfm.zip web.csv web_index.json) && cp data/processed/lastfm/lastfm.zip web/data/
 	

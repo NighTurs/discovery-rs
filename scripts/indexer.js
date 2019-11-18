@@ -3,7 +3,7 @@ const csv = require('csv-parser');
 const elasticlunr = require('elasticlunr');
 
 var index = null;
-fs.createReadStream('../data/ds.csv')
+fs.createReadStream('data/processed/lastfm/web.csv')
     .pipe(csv())
     .on('data', (row) => {
         if (!index) {
@@ -20,6 +20,6 @@ fs.createReadStream('../data/ds.csv')
         index.addDoc(row);
     })
     .on('end', () => {
-        fs.writeFileSync('../data/ds_index.json', JSON.stringify(index.toJSON()));
+        fs.writeFileSync('data/processed/lastfm/web_index.json', JSON.stringify(index.toJSON()));
         console.log('Finished processing');
     });

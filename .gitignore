@@ -4,8 +4,8 @@ data/processed/*
 !data/processed/lastfm
 data/processed/lastfm/*
 !data/processed/lastfm/my_list.txt
-web/data/
-web/js/node_modules
+web/data/*
+node_modules
 fastai
 
 *.pyc
