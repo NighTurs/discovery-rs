@@ -1,25 +1,27 @@
 const fs = require('fs');
 const csv = require('csv-parser');
-const elasticlunr = require('elasticlunr');
+const MiniSearch = require('minisearch');
 
-var index = null;
+let index = null
+let rows = [];
+
 fs.createReadStream(process.argv[2] + '/web.csv')
     .pipe(csv())
     .on('data', (row) => {
         if (!index) {
-            index = elasticlunr(function () {
-                for (field in row) {
-                    if (field.startsWith('t_')) {
-                        this.addField(field);        
-                    }
+            let fields = [];
+            for (field in row) {
+                if (field.startsWith('t_')) {
+                    fields.push(field);
                 }
-                this.setRef('idx');
-                this.saveDocument(false);
-            });
+            }
+            index = new MiniSearch({fields: fields, idField: 'idx'})
         }
-        index.addDoc(row);
+        rows.push(row);
     })
     .on('end', () => {
+        index.addAll(rows);
         fs.writeFileSync(process.argv[2] + '/web_index.json', JSON.stringify(index.toJSON()));
-        console.log('Finished processing');
     });
+
+

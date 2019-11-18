@@ -149,7 +149,7 @@ JSZipUtils.getBinaryContent(`data/${ds}.zip`, function (err, data) {
             loadPoints(generated_points);
         });
         zip.file("web_index.json").async("string").then(function (index_str) {
-            loadIndex(JSON.parse(index_str))
+            loadIndex(index_str)
         });
     });
 });
@@ -165,8 +165,8 @@ function checkIfLoading() {
 let index = null;
 
 function loadIndex(data) {
-    index = elasticlunr.Index.load(data);
-    for (let field of index.getFields()) {
+    index = MiniSearch.loadJSON(data, {fields: [], idField: 'idx'});
+    for (let field in index._fieldIds) {
         var opt = document.createElement('option');
         opt.value = field;
         opt.innerHTML = field.substr(2);
@@ -301,15 +301,14 @@ function loadPoints(generated_points) {
         if (!searchQuery) {
             return;
         }
-        searchOpt = { fields: {} }
-        searchOpt.fields[searchFieldInp.value] = { bool: "AND" }
+        searchOpt = { fields: [searchFieldInp.value], combineWith: 'AND' }
         found = index.search(searchQuery, searchOpt);
         if (found.length > 0) {
             let geometry = new THREE.Geometry();
             let colors = [];
             let idxs = [];
             for (let datum of found) {
-                let idx = +datum.ref;
+                let idx = +datum.id;
                 let item = generated_points[idx];
                 if (!applyFilter(item)) {
                     continue;
