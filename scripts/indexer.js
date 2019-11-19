@@ -2,7 +2,7 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const MiniSearch = require('minisearch');
 
-let index = null
+let index = null;
 let rows = [];
 
 fs.createReadStream(process.argv[2] + '/web.csv')
@@ -15,8 +15,10 @@ fs.createReadStream(process.argv[2] + '/web.csv')
                     fields.push(field);
                 }
             }
-            index = new MiniSearch({fields: fields, idField: 'idx'})
+            fields.push('t_flags');
+            index = new MiniSearch({fields: fields, idField: 'idx'});
         }
+        row.idx = +row.idx;
         rows.push(row);
     })
     .on('end', () => {

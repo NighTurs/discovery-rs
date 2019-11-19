@@ -4,8 +4,8 @@ const pointsSizeVal = document.querySelector('#points-size-value');
 const pointsOpacityInp = document.querySelector('#points-opacity');
 const pointsOpacityVal = document.querySelector('#points-opacity-value');
 
-const colorBalanceInp = document.querySelector('#color-balance'); 
-const colorBalanceVal = document.querySelector('#color-balance-value'); 
+const colorBalanceInp = document.querySelector('#color-balance');
+const colorBalanceVal = document.querySelector('#color-balance-value');
 
 const filterInp = document.querySelector('#filter-range');
 const filterVal = document.querySelector('#filter-value');
@@ -18,6 +18,9 @@ const searchFieldInp = document.querySelector('#search-field');
 const colorFieldInp = document.querySelector('#color-field');
 const datasetFieldInp = document.querySelector('#dataset-field');
 const filterFieldInp = document.querySelector('#filter-field');
+
+const flagNameInp = document.querySelector("#flag-name");
+const flagNameDatalistInp = document.querySelector("#flag-name-datalist");
 
 const initPointsSize = 3
 const initPointsOpacity = 1.0
@@ -69,7 +72,7 @@ let zoom = d3.zoom()
 
 view = d3.select(renderer.domElement);
 function setUpZoom() {
-    view.call(zoom);
+    view.call(zoom).on("dblclick.zoom", null);
     let initial_scale = getScaleFromZ(far);
     var initial_transform = d3.zoomIdentity.translate(viz_width / 2, height / 2).scale(initial_scale);
     zoom.transform(view, initial_transform);
@@ -118,15 +121,31 @@ datasetFieldInp.addEventListener('change', event => datasetRedirect());
 
 const urlParams = new URLSearchParams(window.location.search);
 
-ds = urlParams.get('ds');
+function parseDatasetName() {
+    let ds = urlParams.get('ds');
 
-if (!ds) {
-    ds = datasetFieldInp.value
+    if (!ds) {
+        ds = datasetFieldInp.value
+    }
+    
+    if (datasetFieldInp.value != ds) {
+        datasetFieldInp.value = ds
+    } 
+    return ds;       
 }
 
-if (datasetFieldInp.value != ds) {
-    datasetFieldInp.value = ds
-}
+const ds = parseDatasetName();
+const lsFlagsItem = ds + '-flags';
+
+let flags = window.localStorage.getItem(lsFlagsItem);
+    if (!flags) {
+        flags = "{}";
+    }
+flags = JSON.parse(flags);
+
+let generated_points = null;
+let index = null;
+let loadingInc = 0;
 
 JSZipUtils.getBinaryContent(`data/${ds}.zip`, function (err, data) {
     if (err) {
@@ -134,7 +153,7 @@ JSZipUtils.getBinaryContent(`data/${ds}.zip`, function (err, data) {
     }
     JSZip.loadAsync(data).then(function (zip) {
         zip.file("web.csv").async("string").then(function (ds_csv) {
-            let generated_points = d3.csvParse(ds_csv, function (d) {
+            generated_points = d3.csvParse(ds_csv, function (d) {
                 d.idx = +d.idx;
                 d.position = [+d.x, +d.y];
                 delete d.x;
@@ -144,9 +163,10 @@ JSZipUtils.getBinaryContent(`data/${ds}.zip`, function (err, data) {
                         d[field] = +d[field];
                     }
                 }
+                d['flags'] = [];
                 return d;
             });
-            loadPoints(generated_points);
+            loadPoints();
         });
         zip.file("web_index.json").async("string").then(function (index_str) {
             loadIndex(index_str)
@@ -154,18 +174,45 @@ JSZipUtils.getBinaryContent(`data/${ds}.zip`, function (err, data) {
     });
 });
 
-let loadingInc = 0;
-
 function checkIfLoading() {
     if (loadingInc == 2) {
+        applyFlagsFromLS();
         document.querySelector('#loader-outer').style.display = "none";
     }
 }
 
-let index = null;
+function updateFlagInIndex(item) {
+    index.remove(item);
+    item["t_flags"] = item.flags.join(separator = ", ");
+    if (item.t_flags.length == 0) {
+        delete item.t_flags;
+    }
+    index.add(item);
+}
+
+function updateFlagsDatalist() {
+    flagNameDatalistInp.innerHTML = '';
+    for (let flag in flags) {
+        var opt = document.createElement('option');
+        opt.value = flag;
+        flagNameDatalistInp.appendChild(opt);
+    }
+}
+
+function applyFlagsFromLS() {
+    for (let flag in flags) {
+        for (let idx of flags[flag]) {
+            let item = generated_points[idx];
+            item.flags.push(flag);
+            updateFlagInIndex(item);
+        }
+    }
+    updateFlagsDatalist();
+}
 
 function loadIndex(data) {
-    index = MiniSearch.loadJSON(data, {fields: [], idField: 'idx'});
+    let fields = Object.keys(JSON.parse(data).fieldIds);
+    index = MiniSearch.loadJSON(data, { fields: fields, idField: 'idx' });
     for (let field in index._fieldIds) {
         var opt = document.createElement('option');
         opt.value = field;
@@ -176,7 +223,8 @@ function loadIndex(data) {
     checkIfLoading();
 }
 
-function loadPoints(generated_points) {
+function loadPoints() {
+
     for (field in generated_points[0]) {
         if (field.startsWith('n_')) {
             var opt = document.createElement('option');
@@ -209,7 +257,7 @@ function loadPoints(generated_points) {
     function applyFilter(point) {
         return filterInp.value <= point[filterFieldInp.value];
     }
-    
+
     let scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0000000);
     pointsContainer = new THREE.Object3D();
@@ -433,6 +481,40 @@ function loadPoints(generated_points) {
         }
     })
 
+    function updateFlagsLocalStorage() {
+        window.localStorage.setItem(lsFlagsItem, JSON.stringify(flags));
+    }
+
+    view.on("dblclick", () => {
+        let flag = flagNameInp.value;
+        if (flag.length == 0) {
+            return;
+        }
+        let [mouseX, mouseY] = d3.mouse(view.node());
+        let mouse_position = [mouseX, mouseY];
+        const [datum, fromFilter] = getIntersect(mouse_position);
+        if (!datum) {
+            return;
+        }
+        if (datum.flags.includes(flag)) {
+            datum.flags = datum.flags.filter(x => x !== flag);
+            flags[flag] = flags[flag].filter(x => x !== datum.idx);
+            if (flags[flag].length == 0) {
+                delete flags[flag];
+            }
+        } else {
+            datum.flags.push(flag);
+            if (!flags.hasOwnProperty(flag)) {
+                flags[flag] = [];
+            }
+            flags[flag].push(datum.idx);
+        }
+        updateFlagInIndex(datum);
+        updateFlagsLocalStorage();
+        updateFlagsDatalist();
+        updateTooltip();
+    })
+
     function mouseToThree(mouseX, mouseY) {
         return new THREE.Vector3(
             mouseX / viz_width * 2 - 1,
@@ -523,7 +605,7 @@ function loadPoints(generated_points) {
         }
         $tooltip.innerHTML += `<div style="padding: 4px; margin-bottom: 4px; background: ${getColor(tooltip_state.data, tooltip_state.fromFilter)};"><b>${tooltip_state.data.t_name}</b></div>`;
         for (field in tooltip_state.data) {
-            if (field == "t_name") {
+            if (field == "t_name" || field == "flags") {
                 continue;
             }
             let key = field;
