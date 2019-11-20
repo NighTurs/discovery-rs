@@ -95,10 +95,16 @@
         <fieldset>
             <legend>Flag</legend>
             <div class="control">
-                <input id="flag-name" type="text" list="flag-name-datalist" placeholder="Flag name, double-click to apply">
+                <span class="label">Name</span>
+                <input id="flag-name" type="text" list="flag-name-datalist" placeholder="Double-click to apply">
                 <datalist id="flag-name-datalist">
                 </datalist>
             </div>
+            <div class="control">
+                <span class="label">Recommender Server</span>
+                <input id="rec-server" type="text" value="http://localhost:5501">
+            </div>
+            <input id="rec-button" class="control" type="button" value="Send">
         </fieldset>
     </div>
     <div id="loader-outer">

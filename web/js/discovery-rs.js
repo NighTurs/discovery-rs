@@ -22,6 +22,9 @@ const filterFieldInp = document.querySelector('#filter-field');
 const flagNameInp = document.querySelector("#flag-name");
 const flagNameDatalistInp = document.querySelector("#flag-name-datalist");
 
+const recServerInp = document.querySelector("#rec-server");
+const recButton = document.querySelector("#rec-button");
+
 const initPointsSize = 3
 const initPointsOpacity = 1.0
 
@@ -125,22 +128,22 @@ function parseDatasetName() {
     let ds = urlParams.get('ds');
 
     if (!ds) {
-        ds = datasetFieldInp.value
+        ds = datasetFieldInp.value;
     }
-    
+
     if (datasetFieldInp.value != ds) {
-        datasetFieldInp.value = ds
-    } 
-    return ds;       
+        datasetFieldInp.value = ds;
+    }
+    return ds;
 }
 
 const ds = parseDatasetName();
 const lsFlagsItem = ds + '-flags';
 
 let flags = window.localStorage.getItem(lsFlagsItem);
-    if (!flags) {
-        flags = "{}";
-    }
+if (!flags) {
+    flags = "{}";
+}
 flags = JSON.parse(flags);
 
 let generated_points = null;
@@ -513,7 +516,45 @@ function loadPoints() {
         updateFlagsLocalStorage();
         updateFlagsDatalist();
         updateTooltip();
-    })
+    });
+
+    recButton.onclick = () => {
+        if (recServerInp.value.length == 0 || flagNameDatalistInp.value == 0) {
+            return;
+        }
+        let recField = flagNameInp.value + '_recommend';
+        fetch(recServerInp.value, {
+            method: 'POST',
+            body: JSON.stringify({ ds: ds, idxs: flags[flagNameInp.value] }),
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            })
+        }).then(response => {
+            return response.json();
+        }).then(data => {
+            for (let i = 0; i < generated_points.length; i++) {
+                generated_points[i][recField] = data.recs[i];
+            }
+            let found = false;
+            for (let opt of colorFieldInp.children) {
+                if (opt.value == recField) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                var opt = document.createElement('option');
+                opt.value = recField;
+                opt.innerHTML = recField;
+                colorFieldInp.appendChild(opt);
+                filterFieldInp.appendChild(opt.cloneNode(true));
+            }
+            colorFieldInp.value = recField;
+            updateColors();
+            filterFieldInp.value = recField;
+            filterInputHandler();
+        })
+        .catch(error => console.error(error));
+    }
 
     function mouseToThree(mouseX, mouseY) {
         return new THREE.Vector3(

@@ -186,3 +186,10 @@ gbook_web_archive: web/data/gbook.zip
 
 web/data/gbook.zip: data/processed/gbook/web.csv data/processed/gbook/web_index.json
 	(cd -- data/processed/gbook && zip gbook.zip web.csv web_index.json) && cp data/processed/gbook/gbook.zip web/data/
+
+# Recommender server
+
+start_rec_server:
+	python -m scripts.rec_server \
+	--port 5501 --ds ml gbook lastfm \
+	--models models/ml_epoch_100.model models/gbook_epoch_100.model models/lastfm_epoch_30.model
