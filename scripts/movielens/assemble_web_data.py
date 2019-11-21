@@ -2,13 +2,14 @@ import argparse
 import pickle
 import pandas as pd
 from os import path
-from ..utils import percentile
+from ..utils import percentile, rescale_tsne
 
 
 def assemble_web_data(raw_dir, processed_dir):
     with open(path.join(processed_dir, 'x2i.pickle'), 'rb') as handle:
         x2i = pickle.load(handle)
     tsne_emb = pd.read_csv(path.join(processed_dir, 'tsne_emb.csv'))
+    tsne_emb = rescale_tsne(tsne_emb)
     with open(path.join(processed_dir, 'recommendations.pickle'), 'rb') as handle:
         recommendations = pickle.load(handle)
     movies = pd.read_csv(path.join(raw_dir, 'movies.csv'))

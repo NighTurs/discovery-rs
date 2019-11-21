@@ -41,7 +41,7 @@ let height = window.innerHeight;
 
 let fov = 20;
 let near = 2;
-let far = 800;
+let far = 600;
 
 // Set up camera and scene
 let camera = new THREE.PerspectiveCamera(
