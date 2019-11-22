@@ -1,0 +1,28 @@
+{
+  "name": "discovery-rs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "web/js/discovery-rs.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NighTurs/discovery-rs.git"
+  },
+  "author": "NighTurs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NighTurs/discovery-rs/issues"
+  },
+  "homepage": "https://github.com/NighTurs/discovery-rs#readme",
+  "dependencies": {
+    "csv-parser": "^2.3.2",
+    "minisearch": "^2.1.3"
+  },
+  "devDependencies": {
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2"
+  }
+}
