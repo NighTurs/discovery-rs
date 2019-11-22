@@ -213,9 +213,10 @@ function applyFlagsFromLS() {
     updateFlagsDatalist();
 }
 
-function loadIndex(data) {
-    let fields = Object.keys(JSON.parse(data).fieldIds);
-    index = MiniSearch.loadJSON(data, { fields: fields, idField: 'idx' });
+function loadIndex(json) {
+    let data = JSON.parse(json);
+    let fields = Object.keys(data.fieldIds);
+    index = MiniSearch.loadJS(data, { fields: fields, idField: 'idx' });
     for (let field in index._fieldIds) {
         var opt = document.createElement('option');
         opt.value = field;
