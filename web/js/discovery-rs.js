@@ -59,6 +59,8 @@ window.addEventListener('resize', () => {
     renderer.setSize(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    // Resets zoom to default
+    setUpZoom();
 })
 
 // Add canvas
