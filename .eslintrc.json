@@ -9,11 +9,19 @@
     ],
     "globals": {
         "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
+        "SharedArrayBuffer": "readonly",
+        "THREE": false,
+        "d3": false,
+        "JSZipUtils": false,
+        "JSZip": false,
+        "MiniSearch": false
     },
     "parserOptions": {
         "ecmaVersion": 2018
     },
     "rules": {
+        "no-plusplus": 0,
+        "prefer-destructuring": 0,
+        "no-param-reassign": ["error", { "props": false }]
     }
 }
