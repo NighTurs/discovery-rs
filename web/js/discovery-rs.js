@@ -87,7 +87,6 @@ function zoomHandler(d3Transform) {
 }
 
 const zoom = d3.zoom()
-  .scaleExtent([getScaleFromZ(far), getScaleFromZ(near + 1)])
   .on('zoom', () => {
     const d3Transform = d3.event.transform;
     zoomHandler(d3Transform);
@@ -95,6 +94,7 @@ const zoom = d3.zoom()
 
 const view = d3.select(renderer.domElement);
 function setUpZoom() {
+  zoom.scaleExtent([getScaleFromZ(far), getScaleFromZ(near + 1)]);
   view.call(zoom).on('dblclick.zoom', null);
   const initialScale = getScaleFromZ(far);
   const initialTransform = d3.zoomIdentity.translate(vizWidth / 2, height / 2).scale(initialScale);
