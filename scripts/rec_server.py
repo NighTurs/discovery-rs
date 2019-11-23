@@ -31,7 +31,6 @@ def create_task():
 
 
 def load_models(ds, model_paths):
-    print('here')
     for d, model_file in zip(ds, model_paths):
         model = DynamicAutoencoder()
         recoder = Recoder(model)
