@@ -31,11 +31,6 @@ const initPointsOpacity = 1.0;
 
 const findingsColor = [0.15, 0.68, 1];
 
-filterInp.value = 0;
-filterVal.innerHTML = 0;
-colorBalanceInp.value = 0.5;
-colorBalanceVal.innerHTML = 0.5;
-
 let width = window.innerWidth;
 let vizWidth = width;
 let height = window.innerHeight;
