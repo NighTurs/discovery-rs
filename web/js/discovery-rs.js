@@ -24,6 +24,7 @@ const flagNameDatalistInp = document.querySelector('#flag-name-datalist');
 
 const recServerInp = document.querySelector('#rec-server');
 const recButton = document.querySelector('#rec-button');
+const recStatus = document.querySelector('#rec-status');
 
 const initPointsSize = 3;
 const initPointsOpacity = 1.0;
@@ -463,6 +464,19 @@ function loadPoints() {
 
   colorBalanceInp.addEventListener('input', () => colorBalanceInputHandler());
 
+  function updateRecButtonStatus() {
+    if (flagNameInp.value.length > 0
+      && Object.prototype.hasOwnProperty.call(flags, flagNameInp.value)
+      && recServerInp.value.length > 0
+      && recServerInp.checkValidity()) {
+      recButton.disabled = false;
+    } else {
+      recButton.disabled = true;
+    }
+  }
+
+  flagNameInp.addEventListener('input', () => updateRecButtonStatus());
+
   // Hover and tooltip interaction
 
   const raycaster = new THREE.Raycaster();
@@ -528,10 +542,13 @@ function loadPoints() {
     window.localStorage.setItem(lsFlagsItem, JSON.stringify(flags));
   }
 
+  function setRecStatus(color, msg) {
+    recStatus.innerHTML = msg;
+    recStatus.style.color = color;
+    window.setTimeout(() => { recStatus.innerHTML = ''; }, 3000);
+  }
+
   recButton.onclick = () => {
-    if (recServerInp.value.length === 0 || flagNameDatalistInp.value === 0) {
-      return;
-    }
     const recField = `${flagNameInp.value}_recommend`;
     fetch(recServerInp.value, {
       method: 'POST',
@@ -539,27 +556,37 @@ function loadPoints() {
       headers: new Headers({
         'Content-Type': 'application/json',
       }),
-    }).then((response) => response.json()).then((data) => {
-      for (let i = 0; i < generatedPoints.length; i++) {
-        generatedPoints[i][recField] = data.recs[i];
+    }).then((response) => {
+      if (response.ok) {
+        response.json().then((data) => {
+          for (let i = 0; i < generatedPoints.length; i++) {
+            generatedPoints[i][recField] = data.recs[i];
+          }
+          let found = false;
+          [...colorFieldInp.children].forEach((opt) => {
+            if (opt.value === recField) {
+              found = true;
+            }
+          });
+          if (!found) {
+            const opt = document.createElement('option');
+            opt.value = recField;
+            opt.innerHTML = recField;
+            colorFieldInp.appendChild(opt);
+            filterFieldInp.appendChild(opt.cloneNode(true));
+          }
+          colorFieldInp.value = recField;
+          updateColors();
+          filterFieldInp.value = recField;
+          filterInputHandler();
+          setRecStatus('green', 'Success');
+        });
+      } else {
+        setRecStatus('red', `HTTP-Error: ${response.status}`);
       }
-      let found = false;
-      colorFieldInp.children.forEach((opt) => {
-        if (opt.value === recField) {
-          found = true;
-        }
-      });
-      if (!found) {
-        const opt = document.createElement('option');
-        opt.value = recField;
-        opt.innerHTML = recField;
-        colorFieldInp.appendChild(opt);
-        filterFieldInp.appendChild(opt.cloneNode(true));
-      }
-      colorFieldInp.value = recField;
-      updateColors();
-      filterFieldInp.value = recField;
-      filterInputHandler();
+    }).catch((error) => {
+      setRecStatus('red', 'Error');
+      throw error;
     });
   };
 
@@ -691,6 +718,7 @@ function loadPoints() {
     updateFlagsLocalStorage();
     updateFlagsDatalist();
     updateTooltip();
+    updateRecButtonStatus();
   });
 
   loadingInc++;

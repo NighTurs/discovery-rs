@@ -102,9 +102,12 @@
             </div>
             <div class="control">
                 <span class="label">Recommender Server</span>
-                <input id="rec-server" type="text" value="http://localhost:5501">
+                <input id="rec-server" type="url" value="http://localhost:5501" autocomplete="off">
             </div>
-            <input id="rec-button" class="control" type="button" value="Send">
+            <div class="control flex-c">
+                <input id="rec-button" type="button" value="Send Flag" disabled="true" autocomplete="off">
+                <span id="rec-status"/>
+            </div>
         </fieldset>
     </div>
     <div id="loader-outer">

@@ -25,7 +25,7 @@ html, body {
     background-color: rgb(32, 32, 32);
 }
 
-input[type=text] {
+input[type=text], input[type=url] {
     margin: 0;
     width: 100%;
     box-sizing: border-box;
@@ -188,6 +188,11 @@ fieldset {
 
 #toolbar .value:after {
     text-align: center;
+}
+
+#rec-status {
+    margin: auto;
+    font-size: x-small;
 }
 
 #loader-outer {
