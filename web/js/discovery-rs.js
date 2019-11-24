@@ -28,81 +28,83 @@ const findingsColor = [0.15, 0.68, 1]; // blue
 
 let width = window.innerWidth;
 let height = window.innerHeight;
-
 const fov = 20;
 const near = 2;
 const far = 600;
 
-// Set up camera and scene
-const camera = new THREE.PerspectiveCamera(
-  fov,
-  width / height,
-  near,
-  far + 1,
-);
-
-// Add canvas
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(width, height);
-document.body.appendChild(renderer.domElement);
-
-function toRadians(angle) {
-  return angle * (Math.PI / 180);
-}
-
-function getScaleFromZ(cameraZPosition) {
-  const halfFov = fov / 2;
-  const halfFovRadians = toRadians(halfFov);
-  const halfFovHeight = Math.tan(halfFovRadians) * cameraZPosition;
-  const fovHeight = halfFovHeight * 2;
-  // Divide visualization height by height derived from field of view
-  const scale = height / fovHeight;
-  return scale;
-}
-
-function getZFromScale(scale) {
-  const halfFov = fov / 2;
-  const halfFovRadians = toRadians(halfFov);
-  const scaleHeight = height / scale;
-  const cameraZPosition = scaleHeight / (2 * Math.tan(halfFovRadians));
-  return cameraZPosition;
-}
-
-function zoomHandler(d3Transform) {
-  const scale = d3Transform.k;
-  const x = -(d3Transform.x - width / 2) / scale;
-  const y = (d3Transform.y - height / 2) / scale;
-  const z = getZFromScale(scale);
-  camera.position.set(x, y, z);
-}
-
-const zoom = d3.zoom()
-  .on('zoom', () => {
-    const d3Transform = d3.event.transform;
-    zoomHandler(d3Transform);
-  });
+const [camera, renderer] = (function setupThree() {
+  const lCamera = new THREE.PerspectiveCamera(
+    fov,
+    width / height,
+    near,
+    far + 1,
+  );
+  const lRenderer = new THREE.WebGLRenderer();
+  lRenderer.setSize(width, height);
+  document.body.appendChild(lRenderer.domElement);
+  return [lCamera, lRenderer];
+}());
 
 const view = d3.select(renderer.domElement);
-function setUpZoom() {
-  zoom.scaleExtent([getScaleFromZ(far), getScaleFromZ(near + 1)]);
-  view.call(zoom).on('dblclick.zoom', null);
-  const initialScale = getScaleFromZ(far);
-  const initialTransform = d3.zoomIdentity.translate(width / 2, height / 2).scale(initialScale);
-  zoom.transform(view, initialTransform);
-  camera.position.set(0, 0, far);
-}
-setUpZoom();
 
-window.addEventListener('resize', () => {
-  width = window.innerWidth;
-  height = window.innerHeight;
+(function setupZoom() {
+  function toRadians(angle) {
+    return angle * (Math.PI / 180);
+  }
 
-  renderer.setSize(width, height);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  // Resets zoom to default
-  setUpZoom();
-});
+  function getScaleFromZ(cameraZPosition) {
+    const halfFov = fov / 2;
+    const halfFovRadians = toRadians(halfFov);
+    const halfFovHeight = Math.tan(halfFovRadians) * cameraZPosition;
+    const fovHeight = halfFovHeight * 2;
+    // Divide visualization height by height derived from field of view
+    const scale = height / fovHeight;
+    return scale;
+  }
+
+  function getZFromScale(scale) {
+    const halfFov = fov / 2;
+    const halfFovRadians = toRadians(halfFov);
+    const scaleHeight = height / scale;
+    const cameraZPosition = scaleHeight / (2 * Math.tan(halfFovRadians));
+    return cameraZPosition;
+  }
+
+  function zoomHandler(d3Transform) {
+    const scale = d3Transform.k;
+    const x = -(d3Transform.x - width / 2) / scale;
+    const y = (d3Transform.y - height / 2) / scale;
+    const z = getZFromScale(scale);
+    camera.position.set(x, y, z);
+  }
+
+  const zoom = d3.zoom()
+    .on('zoom', () => {
+      const d3Transform = d3.event.transform;
+      zoomHandler(d3Transform);
+    });
+
+  function initZoom() {
+    zoom.scaleExtent([getScaleFromZ(far), getScaleFromZ(near + 1)]);
+    view.call(zoom).on('dblclick.zoom', null);
+    const initialScale = getScaleFromZ(far);
+    const initialTransform = d3.zoomIdentity.translate(width / 2, height / 2).scale(initialScale);
+    zoom.transform(view, initialTransform);
+    camera.position.set(0, 0, far);
+  }
+  initZoom();
+
+  window.addEventListener('resize', () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    // Resets zoom to default
+    initZoom();
+  });
+}());
 
 const circleSprite = new THREE.TextureLoader().load(
   'res/circle-sprite.png',
