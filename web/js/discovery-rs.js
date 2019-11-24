@@ -24,9 +24,6 @@ const recServerInp = document.querySelector('#rec-server');
 const recButton = document.querySelector('#rec-button');
 const recStatus = document.querySelector('#rec-status');
 
-const initPointsSize = 3;
-const initPointsOpacity = 1.0;
-
 const findingsColor = [0.15, 0.68, 1];
 
 let width = window.innerWidth;
@@ -317,7 +314,6 @@ function loadPoints() {
     }
   }
 
-  pointsSizeInputHandler(initPointsSize);
   pointsSizeInp.addEventListener('input', (event) => pointsSizeInputHandler(+event.target.value));
 
   function pointsOpacityInputHandler(newVal) {
@@ -329,7 +325,6 @@ function loadPoints() {
     }
   }
 
-  pointsOpacityInputHandler(initPointsOpacity);
   pointsOpacityInp.addEventListener('input', (event) => pointsOpacityInputHandler(+event.target.value));
 
   function switchHideOthers(newVal) {
