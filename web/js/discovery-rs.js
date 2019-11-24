@@ -24,10 +24,9 @@ const recServerInp = document.querySelector('#rec-server');
 const recButton = document.querySelector('#rec-button');
 const recStatus = document.querySelector('#rec-status');
 
-const findingsColor = [0.15, 0.68, 1];
+const findingsColor = [0.15, 0.68, 1]; // blue
 
 let width = window.innerWidth;
-let vizWidth = width;
 let height = window.innerHeight;
 
 const fov = 20;
@@ -71,7 +70,7 @@ function getZFromScale(scale) {
 
 function zoomHandler(d3Transform) {
   const scale = d3Transform.k;
-  const x = -(d3Transform.x - vizWidth / 2) / scale;
+  const x = -(d3Transform.x - width / 2) / scale;
   const y = (d3Transform.y - height / 2) / scale;
   const z = getZFromScale(scale);
   camera.position.set(x, y, z);
@@ -88,7 +87,7 @@ function setUpZoom() {
   zoom.scaleExtent([getScaleFromZ(far), getScaleFromZ(near + 1)]);
   view.call(zoom).on('dblclick.zoom', null);
   const initialScale = getScaleFromZ(far);
-  const initialTransform = d3.zoomIdentity.translate(vizWidth / 2, height / 2).scale(initialScale);
+  const initialTransform = d3.zoomIdentity.translate(width / 2, height / 2).scale(initialScale);
   zoom.transform(view, initialTransform);
   camera.position.set(0, 0, far);
 }
@@ -96,7 +95,6 @@ setUpZoom();
 
 window.addEventListener('resize', () => {
   width = window.innerWidth;
-  vizWidth = width;
   height = window.innerHeight;
 
   renderer.setSize(width, height);
@@ -472,7 +470,7 @@ function loadPoints() {
 
   function mouseToThree(mouseX, mouseY) {
     return new THREE.Vector3(
-      (mouseX / vizWidth) * 2 - 1,
+      (mouseX / width) * 2 - 1,
       -(mouseY / height) * 2 + 1,
       1,
     );
