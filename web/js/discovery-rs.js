@@ -1,27 +1,25 @@
+const datasetInp = document.querySelector('#dataset');
+
 const pointsSizeInp = document.querySelector('#points-size');
 const pointsSizeVal = document.querySelector('#points-size-value');
-
 const pointsOpacityInp = document.querySelector('#points-opacity');
 const pointsOpacityVal = document.querySelector('#points-opacity-value');
 
+const colorFieldInp = document.querySelector('#color-field');
 const colorBalanceInp = document.querySelector('#color-balance');
 const colorBalanceVal = document.querySelector('#color-balance-value');
 
-const filterInp = document.querySelector('#filter-range');
+const filterFieldInp = document.querySelector('#filter-field');
+const filterInp = document.querySelector('#filter');
 const filterVal = document.querySelector('#filter-value');
 
-const searchInp = document.querySelector('#search');
-const searchHideOthersInp = document.querySelector('#hide-others');
-const searchColorFindingsInp = document.querySelector('#color-findings');
-
 const searchFieldInp = document.querySelector('#search-field');
-const colorFieldInp = document.querySelector('#color-field');
-const datasetFieldInp = document.querySelector('#dataset-field');
-const filterFieldInp = document.querySelector('#filter-field');
+const searchInp = document.querySelector('#search');
+const searchHideOthersInp = document.querySelector('#search-hide-others');
+const searchColorFindingsInp = document.querySelector('#search-color-findings');
 
 const flagNameInp = document.querySelector('#flag-name');
-const flagNameDatalistInp = document.querySelector('#flag-name-datalist');
-
+const flagNameDatalist = document.querySelector('#flag-name-datalist');
 const recServerInp = document.querySelector('#rec-server');
 const recButton = document.querySelector('#rec-button');
 const recStatus = document.querySelector('#rec-status');
@@ -116,10 +114,10 @@ const circleSprite = new THREE.TextureLoader().load(
 );
 
 function datasetRedirect() {
-  window.location = `${window.location.origin + window.location.pathname}?ds=${datasetFieldInp.value}`;
+  window.location = `${window.location.origin + window.location.pathname}?ds=${datasetInp.value}`;
 }
 
-datasetFieldInp.addEventListener('change', () => datasetRedirect());
+datasetInp.addEventListener('change', () => datasetRedirect());
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -127,11 +125,11 @@ function parseDatasetName() {
   let ds = urlParams.get('ds');
 
   if (!ds) {
-    ds = datasetFieldInp.value;
+    ds = datasetInp.value;
   }
 
-  if (datasetFieldInp.value !== ds) {
-    datasetFieldInp.value = ds;
+  if (datasetInp.value !== ds) {
+    datasetInp.value = ds;
   }
   return ds;
 }
@@ -159,11 +157,11 @@ function updateFlagInIndex(item) {
 }
 
 function updateFlagsDatalist() {
-  flagNameDatalistInp.innerHTML = '';
+  flagNameDatalist.innerHTML = '';
   Object.keys(flags).forEach((flag) => {
     const opt = document.createElement('option');
     opt.value = flag;
-    flagNameDatalistInp.appendChild(opt);
+    flagNameDatalist.appendChild(opt);
   });
 }
 

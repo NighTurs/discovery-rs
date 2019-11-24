@@ -21,7 +21,7 @@
             <legend>Points</legend>
             <div class="flex-a-c control">
                 <span class="label">Dataset</span>
-                <select id="dataset-field">
+                <select id="dataset">
                     <option value="lastfm" selected>Last.fm</option>
                     <option value="ml">MovieLens</option>
                     <option value="gbook">GoodBooks</option>
@@ -70,7 +70,7 @@
                     <span class="label">Min Value</span>
                     <span id="filter-value" class="value">0</span>
                 </div>
-                <input id="filter-range" type="range" min="0" max="1" step="0.001" value="0" autocomplete="off">
+                <input id="filter" type="range" min="0" max="1" step="0.001" value="0" autocomplete="off">
             </div>
         </fieldset>
 
@@ -83,12 +83,12 @@
             </div>
             <input class="control" id="search" type="text" autocomplete="off">
             <div class="flex-a-c control">
-                <input id="hide-others" type="checkbox" autocomplete="off">
-                <label for="hide-others">Hide others</label>
+                <input id="search-hide-others" type="checkbox" autocomplete="off">
+                <label for="search-hide-others">Hide others</label>
             </div>
             <div class="flex-a-c control">
-                <input id="color-findings" type="checkbox" autocomplete="off">
-                <label for="color-findings">Color findings</label>
+                <input id="search-color-findings" type="checkbox" autocomplete="off">
+                <label for="search-color-findings">Color findings</label>
             </div>
         </fieldset>
 
