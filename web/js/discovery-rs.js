@@ -32,6 +32,25 @@ const fov = 20;
 const near = 2;
 const far = 600;
 
+const ds = (function resolveDataset() {
+  const urlParams = new URLSearchParams(window.location.search);
+  let lDs = urlParams.get('ds');
+
+  if (!lDs) {
+    lDs = datasetInp.value;
+  }
+
+  if (datasetInp.value !== lDs) {
+    datasetInp.value = lDs;
+  }
+  return lDs;
+}());
+
+datasetInp.addEventListener('change', () => {
+  // Reload with ds param set
+  window.location = `${window.location.origin + window.location.pathname}?ds=${datasetInp.value}`;
+});
+
 const [camera, renderer] = (function setupThree() {
   const lCamera = new THREE.PerspectiveCamera(
     fov,
@@ -110,28 +129,6 @@ const circleSprite = new THREE.TextureLoader().load(
   'res/circle-sprite.png',
 );
 
-function datasetRedirect() {
-  window.location = `${window.location.origin + window.location.pathname}?ds=${datasetInp.value}`;
-}
-
-datasetInp.addEventListener('change', () => datasetRedirect());
-
-const urlParams = new URLSearchParams(window.location.search);
-
-function parseDatasetName() {
-  let ds = urlParams.get('ds');
-
-  if (!ds) {
-    ds = datasetInp.value;
-  }
-
-  if (datasetInp.value !== ds) {
-    datasetInp.value = ds;
-  }
-  return ds;
-}
-
-const ds = parseDatasetName();
 const lsFlagsItem = `${ds}-flags`;
 
 let flags = window.localStorage.getItem(lsFlagsItem);
