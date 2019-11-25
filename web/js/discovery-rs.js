@@ -24,8 +24,6 @@ const recServerInp = document.querySelector('#rec-server');
 const recButton = document.querySelector('#rec-button');
 const recStatus = document.querySelector('#rec-status');
 
-const findingsColor = [0.15, 0.68, 1]; // blue
-
 let width = window.innerWidth;
 let height = window.innerHeight;
 const fov = 20;
@@ -160,7 +158,7 @@ function isSearchField(field) {
 }
 
 // Returns [r, g, b] array, but values scaled to [0:1]
-const getColor = (function getColorFunc() {
+const itemColor = (function itemColorFunc() {
   const interpolateOranges = (function interpolateColors(colors) {
     const n = colors.length;
     let r = new Array(n);
@@ -194,20 +192,152 @@ const getColor = (function getColorFunc() {
     return interpolateOranges(1 - adjustBalance(v));
   }
 
-  return (point, fromFilter) => {
-    if (fromFilter && searchColorFindingsInp.checked) {
-      return findingsColor;
-    }
-    return colorFromNormNumeric(point[colorFieldInp.value]);
-  };
+  return (item) => colorFromNormNumeric(item[colorFieldInp.value]);
 }());
+
+function searchItemColor(item) {
+  if (searchColorFindingsInp.checked) {
+    return [0.15, 0.68, 1]; // blue
+  }
+  return itemColor(item);
+}
 
 function toRGB(scaledColor) {
   return `${d3.rgb(scaledColor[0] * 255, scaledColor[1] * 255, scaledColor[2] * 255)}`;
 }
 
-function applyFilter(item) {
-  return filterInp.value <= item[filterFieldInp.value];
+class Points {
+  constructor(items, colorFunc, sprite) {
+    this.obj3D = new THREE.Object3D();
+    this.items = items;
+    this.colorFunc = colorFunc;
+    this.sprite = sprite;
+    this.itemIdxs = [];
+  }
+
+  addToScene(scene) {
+    scene.add(this.obj3D);
+  }
+
+  fill(itemIdxs, opacity, size) {
+    this.clear();
+    const geometry = new THREE.BufferGeometry();
+    const colors = new Float32Array(3 * itemIdxs.length);
+    const vertices = new Float32Array(3 * itemIdxs.length);
+    let i = 0;
+    itemIdxs.forEach((idx) => {
+      const item = this.items[idx];
+      vertices[i++] = item.position[0];
+      vertices[i++] = item.position[1];
+      vertices[i++] = 0;
+      const color = this.colorFunc(item);
+      colors[i - 3] = color[0];
+      colors[i - 2] = color[1];
+      colors[i - 1] = color[2];
+    });
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const pointsMaterial = new THREE.PointsMaterial({
+      size,
+      sizeAttenuation: false,
+      vertexColors: THREE.VertexColors,
+      map: this.sprite,
+      opacity,
+      transparent: true,
+    });
+
+    const points = new THREE.Points(geometry, pointsMaterial);
+    this.itemIdxs = itemIdxs;
+    this.obj3D.add(points);
+  }
+
+  clear() {
+    this.obj3D.remove(...this.obj3D.children);
+  }
+
+  isFilled() {
+    return this.obj3D.children.length > 0;
+  }
+
+  getPoints() {
+    if (!this.isFilled()) {
+      return null;
+    }
+    return this.obj3D.children[0];
+  }
+
+  updateColors() {
+    if (!this.isFilled()) {
+      return;
+    }
+    const points = this.getPoints();
+    const colors = points.geometry.getAttribute('color').array;
+    for (let i = 0; i < this.itemIdxs.length; i++) {
+      const idx = this.itemIdxs[i];
+      const color = this.colorFunc(this.items[idx]);
+      colors[i * 3] = color[0];
+      colors[i * 3 + 1] = color[1];
+      colors[i * 3 + 2] = color[2];
+    }
+    points.geometry.getAttribute('color').needsUpdate = true;
+  }
+
+  updateSize(value) {
+    if (this.isFilled()) {
+      this.getPoints().material.size = value;
+    }
+  }
+
+  updateOpacity(value) {
+    if (this.isFilled()) {
+      this.getPoints().material.opacity = value;
+    }
+  }
+
+  updateVisible(value) {
+    this.obj3D.visible = value;
+  }
+
+  isVisible() {
+    return this.obj3D.visible;
+  }
+
+  static mouseToThree(mouseX, mouseY) {
+    return new THREE.Vector3(
+      (mouseX / width) * 2 - 1,
+      -(mouseY / height) * 2 + 1,
+      1,
+    );
+  }
+
+  static sortIntersectsByDistanceToRay(intersects) {
+    const res = intersects.slice();
+    res.sort((a, b) => {
+      if (a.distanceToRay > b.distanceToRay) {
+        return 1;
+      }
+      return (b.distanceToRay > a.distanceToRay) ? -1 : 0;
+    });
+    return res;
+  }
+
+  getIntersect(raycaster, mousePosition) {
+    if (!this.isFilled()) {
+      return null;
+    }
+    const mouseVector = Points.mouseToThree(...mousePosition);
+    raycaster.setFromCamera(mouseVector, three.camera);
+    const intersects = raycaster.intersectObject(this.getPoints());
+
+    if (intersects[0]) {
+      const sortedIntersects = Points.sortIntersectsByDistanceToRay(intersects);
+      const intersect = sortedIntersects[0];
+      const idx = this.itemIdxs[intersect.index];
+      return idx;
+    }
+    return null;
+  }
 }
 
 function proceedWithDataset(items, index) {
@@ -290,59 +420,33 @@ function proceedWithDataset(items, index) {
     }
   });
 
-  const pointsContainer = new THREE.Object3D();
-  const searchContainer = new THREE.Object3D();
-  three.scene.add(pointsContainer);
-  three.scene.add(searchContainer);
-
-  function addPoints() {
-    pointsContainer.remove(...pointsContainer.children);
-    const geometry = new THREE.BufferGeometry();
-    const colors = new Float32Array(3 * items.length);
-    const vertices = new Float32Array(3 * items.length);
-    let aIdx = 0;
-    const idxs = [];
-    items.forEach((datum, idx) => {
-      if (!applyFilter(datum)) {
-        return;
-      }
-      vertices[aIdx++] = datum.position[0];
-      vertices[aIdx++] = datum.position[1];
-      vertices[aIdx++] = 0;
-      const color = getColor(datum, false);
-      colors[aIdx - 3] = color[0];
-      colors[aIdx - 2] = color[1];
-      colors[aIdx - 1] = color[2];
-      idxs.push(idx);
-    });
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices.slice(0, aIdx), 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors.slice(0, aIdx), 3));
-
-    const pointsMaterial = new THREE.PointsMaterial({
-      size: pointsSizeInp.value,
-      sizeAttenuation: false,
-      vertexColors: THREE.VertexColors,
-      map: circleSprite,
-      opacity: pointsOpacityInp.value,
-      transparent: true,
-    });
-
-    const points = new THREE.Points(geometry, pointsMaterial);
-    points.idxs = idxs;
-    pointsContainer.add(points);
+  function applyFilter(item) {
+    return filterInp.value <= item[filterFieldInp.value];
   }
 
-  addPoints();
+  const allPoints = new Points(items, itemColor, circleSprite);
+  allPoints.addToScene(three.scene);
+  const searchPoints = new Points(items, searchItemColor, circleSprite);
+  searchPoints.addToScene(three.scene);
+  const highlightPoint = new Points(items, itemColor, circleSprite);
+  highlightPoint.addToScene(three.scene);
 
+  function fillAllPoints() {
+    allPoints.fill(
+      [...Array(items.length).keys()].filter((x) => applyFilter(items[x])),
+      pointsOpacityInp.value,
+      pointsSizeInp.value,
+    );
+  }
+
+  fillAllPoints();
   three.animate();
 
   function pointsSizeInputHandler(newVal) {
     pointsSizeInp.value = newVal;
     pointsSizeVal.innerHTML = newVal;
-    pointsContainer.children[0].material.size = newVal;
-    if (searchContainer.children.length > 0) {
-      searchContainer.children[0].material.size = newVal;
-    }
+    allPoints.updateSize(newVal);
+    searchPoints.updateSize(newVal);
   }
 
   pointsSizeInp.addEventListener('input', (event) => pointsSizeInputHandler(+event.target.value));
@@ -350,16 +454,14 @@ function proceedWithDataset(items, index) {
   function pointsOpacityInputHandler(newVal) {
     pointsOpacityInp.value = newVal;
     pointsOpacityVal.innerHTML = newVal;
-    pointsContainer.children[0].material.opacity = newVal;
-    if (searchContainer.children.length > 0) {
-      searchContainer.children[0].material.opacity = newVal;
-    }
+    allPoints.updateOpacity(newVal);
+    searchPoints.updateOpacity(newVal);
   }
 
   pointsOpacityInp.addEventListener('input', (event) => pointsOpacityInputHandler(+event.target.value));
 
   function switchHideOthers(newVal) {
-    pointsContainer.visible = !newVal;
+    allPoints.updateVisible(!newVal);
     searchHideOthersInp.checked = newVal;
   }
 
@@ -371,48 +473,18 @@ function proceedWithDataset(items, index) {
 
   function addSearchPoints() {
     const searchQuery = searchInp.value;
-    searchContainer.remove(...searchContainer.children);
+    searchPoints.clear();
     if (!searchQuery) {
       return;
     }
     const searchOpt = { fields: [searchFieldInp.value], combineWith: 'AND' };
     const found = index.search(searchQuery, searchOpt);
     if (found.length > 0) {
-      const geometry = new THREE.BufferGeometry();
-      const colors = new Float32Array(3 * found.length);
-      const vertices = new Float32Array(3 * found.length);
-      let aIdx = 0;
-      const idxs = [];
-      found.forEach((datum) => {
-        const idx = +datum.id;
-        const item = items[idx];
-        if (!applyFilter(item)) {
-          return;
-        }
-        idxs.push(idx);
-        vertices[aIdx++] = item.position[0];
-        vertices[aIdx++] = item.position[1];
-        vertices[aIdx++] = 0;
-        const color = getColor(item, true);
-        colors[aIdx - 3] = color[0];
-        colors[aIdx - 2] = color[1];
-        colors[aIdx - 1] = color[2];
-      });
-      geometry.setAttribute('position', new THREE.BufferAttribute(vertices.slice(0, aIdx), 3));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors.slice(0, aIdx), 3));
-
-      const material = new THREE.PointsMaterial({
-        size: pointsSizeInp.value,
-        sizeAttenuation: false,
-        vertexColors: THREE.VertexColors,
-        map: circleSprite,
-        opacity: pointsOpacityInp.value,
-        transparent: true,
-      });
-
-      const pointsObj = new THREE.Points(geometry, material);
-      pointsObj.idxs = idxs;
-      searchContainer.add(pointsObj);
+      searchPoints.fill(
+        found.map((x) => +x.id).filter((x) => applyFilter(items[x])),
+        pointsOpacityInp.value,
+        pointsSizeInp.value,
+      );
     }
   }
 
@@ -423,7 +495,7 @@ function proceedWithDataset(items, index) {
       switchHideOthers(true);
     } else {
       switchHideOthers(false);
-      searchContainer.remove(...searchContainer.children);
+      searchPoints.clear();
     }
   }
 
@@ -433,44 +505,17 @@ function proceedWithDataset(items, index) {
   function filterInputHandler() {
     const newVal = filterInp.value;
     filterVal.innerHTML = newVal;
-    addPoints();
+    fillAllPoints();
     addSearchPoints();
   }
 
   filterInp.addEventListener('input', () => filterInputHandler());
   filterFieldInp.addEventListener('input', () => filterInputHandler());
-
-  function colorFilterResults() {
-    if (searchContainer.children.length === 0) {
-      return;
-    }
-    const points = searchContainer.children[0];
-    const colors = points.geometry.getAttribute('color').array;
-
-    for (let i = 0; i < points.idxs.length; i++) {
-      const idx = points.idxs[i];
-      const color = getColor(items[idx], true);
-      colors[i * 3] = color[0];
-      colors[i * 3 + 1] = color[1];
-      colors[i * 3 + 2] = color[2];
-    }
-    points.geometry.getAttribute('color').needsUpdate = true;
-  }
-
-  searchColorFindingsInp.addEventListener('input', () => colorFilterResults());
+  searchColorFindingsInp.addEventListener('input', () => searchPoints.updateColors());
 
   function updateColors() {
-    colorFilterResults();
-    const points = pointsContainer.children[0];
-    const colors = points.geometry.getAttribute('color').array;
-    for (let i = 0; i < points.idxs.length; i++) {
-      const idx = points.idxs[i];
-      const color = getColor(items[idx], false);
-      colors[i * 3] = color[0];
-      colors[i * 3 + 1] = color[1];
-      colors[i * 3 + 2] = color[2];
-    }
-    points.geometry.getAttribute('color').needsUpdate = true;
+    searchPoints.updateColors();
+    allPoints.updateColors();
   }
 
   colorFieldInp.addEventListener('input', () => updateColors());
@@ -501,56 +546,24 @@ function proceedWithDataset(items, index) {
   const raycaster = new THREE.Raycaster();
   raycaster.params.Points.threshold = 10;
 
-  function mouseToThree(mouseX, mouseY) {
-    return new THREE.Vector3(
-      (mouseX / width) * 2 - 1,
-      -(mouseY / height) * 2 + 1,
-      1,
-    );
-  }
-
-  function sortIntersectsByDistanceToRay(intersects) {
-    const res = intersects.slice();
-    res.sort((a, b) => {
-      if (a.distanceToRay > b.distanceToRay) {
-        return 1;
-      }
-      return (b.distanceToRay > a.distanceToRay) ? -1 : 0;
-    });
-    return res;
-  }
-
   function getIntersect(mousePosition) {
-    const mouseVector = mouseToThree(...mousePosition);
-    raycaster.setFromCamera(mouseVector, three.camera);
-    let pointsObj = null;
-    let fromFilter = false;
-    if (pointsContainer.visible === true) {
-      pointsObj = pointsContainer.children[0];
+    const allIdx = allPoints.getIntersect(raycaster, mousePosition);
+    const searchIdx = searchPoints.getIntersect(raycaster, mousePosition);
+    if (!allPoints.isVisible() || allIdx === searchIdx) {
+      return [searchIdx, true];
     } else {
-      pointsObj = searchContainer.children[0];
-      fromFilter = true;
+      return [allIdx, false];
     }
-    const intersects = raycaster.intersectObject(pointsObj);
-
-    if (intersects[0]) {
-      const sortedIntersects = sortIntersectsByDistanceToRay(intersects);
-      const intersect = sortedIntersects[0];
-      const idx = pointsObj.idxs[intersect.index];
-      const datum = items[idx];
-      return [datum, fromFilter];
-    }
-    return [null, fromFilter];
   }
 
   view.on('click', () => {
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
-    const [datum] = getIntersect(mousePosition);
-    if (datum) {
+    const [itemIdx] = getIntersect(mousePosition);
+    if (itemIdx) {
       const textArea = document.createElement('textarea');
       document.body.appendChild(textArea);
-      textArea.value = datum.t_name;
+      textArea.value = items[itemIdx].t_name;
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
@@ -602,33 +615,18 @@ function proceedWithDataset(items, index) {
     });
   };
 
-  const hoverContainer = new THREE.Object3D();
-  three.scene.add(hoverContainer);
-
   function removeHighlights() {
-    hoverContainer.remove(...hoverContainer.children);
+    highlightPoint.clear();
   }
 
-  function highlightPoint(datum, fromFilter) {
+  function highlightItem(itemIdx, fromFilter) {
     removeHighlights();
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position',
-      new THREE.BufferAttribute(new Float32Array([datum.position[0], datum.position[1], 0]), 3));
-    const color = getColor(datum, fromFilter);
-    geometry.setAttribute('color',
-      new THREE.BufferAttribute(new Float32Array([color[0], color[1], color[2]]), 3));
-
-    const material = new THREE.PointsMaterial({
-      size: 26,
-      sizeAttenuation: false,
-      vertexColors: THREE.VertexColors,
-      map: circleSprite,
-      transparent: true,
-    });
-
-    const point = new THREE.Points(geometry, material);
-    hoverContainer.add(point);
+    if (fromFilter) {
+      highlightPoint.colorFunc = searchItemColor;
+    } else {
+      highlightPoint.colorFunc = itemColor;
+    }
+    highlightPoint.fill([itemIdx], 1, 26);
   }
 
   // Initial tooltip state
@@ -644,7 +642,7 @@ function proceedWithDataset(items, index) {
     while ($tooltip.firstChild) {
       $tooltip.removeChild($tooltip.firstChild);
     }
-    $tooltip.innerHTML += `<div style="padding: 4px; margin-bottom: 4px; background: ${toRGB(getColor(tooltipState.data, tooltipState.fromFilter))};"><b>${tooltipState.data.t_name}</b></div>`;
+    $tooltip.innerHTML += `<div style="padding: 4px; margin-bottom: 4px; background: ${toRGB(itemColor(tooltipState.data, tooltipState.fromFilter))};"><b>${tooltipState.data.t_name}</b></div>`;
     Object.keys(tooltipState.data).forEach((field) => {
       if (field === 't_name' || field === 'flags') {
         return;
@@ -692,10 +690,10 @@ function proceedWithDataset(items, index) {
   view.on('mousemove', () => {
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
-    const [datum, fromFilter] = getIntersect(mousePosition);
-    if (datum) {
-      highlightPoint(datum, fromFilter);
-      showTooltip(mousePosition, datum, fromFilter);
+    const [itemIdx, fromFilter] = getIntersect(mousePosition);
+    if (itemIdx) {
+      highlightItem(itemIdx, fromFilter);
+      showTooltip(mousePosition, items[itemIdx], fromFilter);
     } else {
       removeHighlights();
       hideTooltip();
@@ -709,11 +707,11 @@ function proceedWithDataset(items, index) {
     }
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
-    const [datum] = getIntersect(mousePosition);
-    if (!datum) {
+    const [itemIdx] = getIntersect(mousePosition);
+    if (!itemIdx) {
       return;
     }
-    flags.applyFlagToItem(flag, datum, index);
+    flags.applyFlagToItem(flag, items[itemIdx], index);
     updateTooltip();
     updateRecButtonStatus();
   });
