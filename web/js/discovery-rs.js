@@ -340,67 +340,71 @@ class Points {
   }
 }
 
-function proceedWithDataset(items, index) {
-  const flags = new class Flags {
-    constructor() {
-      this.lsFlagsItem = `${dsName}-flags`;
-      let json = window.localStorage.getItem(this.lsFlagsItem);
-      if (!json) {
-        json = '{}';
+class Flags {
+  constructor(items, index) {
+    this.items = items;
+    this.index = index;
+    this.lsFlagsItem = `${dsName}-flags`;
+    let json = window.localStorage.getItem(this.lsFlagsItem);
+    if (!json) {
+      json = '{}';
+    }
+    this.container = JSON.parse(json);
+  }
+
+  updateItemInIndex(item) {
+    this.index.remove(item);
+    item.t_flags = item.flags.join(', ');
+    if (item.t_flags.length === 0) {
+      delete item.t_flags;
+    }
+    this.index.add(item);
+  }
+
+  updateDatalist() {
+    flagNameDatalist.innerHTML = '';
+    Object.keys(this.container).forEach((flag) => {
+      appendOption(flagNameDatalist, flag, null);
+    });
+  }
+
+  applyFlagToItem(flag, item) {
+    if (item.flags.includes(flag)) {
+      item.flags = item.flags.filter((x) => x !== flag);
+      this.container[flag] = this.container[flag].filter((x) => x !== item.idx);
+      if (this.container[flag].length === 0) {
+        delete this.container[flag];
       }
-      this.container = JSON.parse(json);
-    }
-
-    static updateItemInIndex(item) {
-      index.remove(item);
-      item.t_flags = item.flags.join(', ');
-      if (item.t_flags.length === 0) {
-        delete item.t_flags;
+    } else {
+      item.flags.push(flag);
+      if (!Object.prototype.hasOwnProperty.call(this.container, flag)) {
+        this.container[flag] = [];
       }
-      index.add(item);
+      this.container[flag].push(item.idx);
     }
+    this.updateItemInIndex(item);
+    this.updateLocalStorage();
+    this.updateDatalist();
+  }
 
-    updateDatalist() {
-      flagNameDatalist.innerHTML = '';
-      Object.keys(this.container).forEach((flag) => {
-        appendOption(flagNameDatalist, flag, null);
-      });
-    }
-
-    applyFlagToItem(flag, item) {
-      if (item.flags.includes(flag)) {
-        item.flags = item.flags.filter((x) => x !== flag);
-        this.container[flag] = this.container[flag].filter((x) => x !== item.idx);
-        if (this.container[flag].length === 0) {
-          delete this.container[flag];
-        }
-      } else {
+  applyFlagsToItems() {
+    Object.keys(this.container).forEach((flag) => {
+      this.container[flag].forEach((idx) => {
+        const item = this.items[idx];
         item.flags.push(flag);
-        if (!Object.prototype.hasOwnProperty.call(this.container, flag)) {
-          this.container[flag] = [];
-        }
-        this.container[flag].push(item.idx);
-      }
-      Flags.updateItemInIndex(item, index);
-      this.updateLocalStorage();
-      this.updateDatalist();
-    }
-
-    applyFlagsToItems() {
-      Object.keys(this.container).forEach((flag) => {
-        this.container[flag].forEach((idx) => {
-          const item = items[idx];
-          item.flags.push(flag);
-          Flags.updateItemInIndex(item, index);
-        });
+        this.updateItemInIndex(item);
       });
-      this.updateDatalist();
-    }
+    });
+    this.updateDatalist();
+  }
 
-    updateLocalStorage() {
-      window.localStorage.setItem(this.lsFlagsItem, JSON.stringify(this.container));
-    }
-  }();
+  updateLocalStorage() {
+    window.localStorage.setItem(this.lsFlagsItem, JSON.stringify(this.container));
+  }
+}
+
+function proceedWithDataset(items, index) {
+  const flags = new Flags(items, index);
   flags.applyFlagsToItems(items);
 
   // Hide loader
