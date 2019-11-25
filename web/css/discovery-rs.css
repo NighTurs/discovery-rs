@@ -23,6 +23,7 @@ html, body {
     padding: 5px;
     color: white;
     background-color: rgb(32, 32, 32);
+    opacity: 0.8;
 }
 
 input[type=text], input[type=url] {
@@ -194,6 +195,26 @@ fieldset {
 #rec-status {
     margin: auto;
     font-size: x-small;
+}
+
+#tooltip {
+    display: none; 
+    position: absolute; 
+    pointer-events: none; 
+    font-size: small;
+    width: 200px; 
+    text-align: center; 
+    line-height: 1; 
+    padding: 6px; 
+    color: white;
+    background: rgb(32, 32, 32);
+    opacity: 0.9;
+}
+
+#tooltip-title {
+    padding: 4px; 
+    margin-bottom: 4px; 
+    font-weight: bold;
 }
 
 #loader-outer {

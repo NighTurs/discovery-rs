@@ -24,6 +24,10 @@ const recServerInp = document.querySelector('#rec-server');
 const recButton = document.querySelector('#rec-button');
 const recStatus = document.querySelector('#rec-status');
 
+const tooltip = document.querySelector('#tooltip');
+const tooltipTitle = document.querySelector('#tooltip-title');
+const tooltipRows = document.querySelector('#tooltip-rows');
+
 let width = window.innerWidth;
 let height = window.innerHeight;
 const fov = 20;
@@ -532,8 +536,6 @@ function proceedWithDataset(items, index) {
 
   flagNameInp.addEventListener('input', () => updateRecButtonStatus());
 
-  // Hover and tooltip interaction
-
   const raycaster = new THREE.Raycaster();
   raycaster.params.Points.threshold = 10;
 
@@ -542,11 +544,11 @@ function proceedWithDataset(items, index) {
     const searchIdx = searchPoints.getIntersect(raycaster, mousePosition);
     if (!allPoints.isVisible() || allIdx === searchIdx) {
       return [searchIdx, true];
-    } else {
-      return [allIdx, false];
     }
+    return [allIdx, false];
   }
 
+  // Copy item name to buffer on click
   view.on('click', () => {
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
@@ -592,7 +594,8 @@ function proceedWithDataset(items, index) {
             appendOption(filterFieldInp, recField, recField);
           }
           colorFieldInp.value = recField;
-          updateColors();
+          allPoints.updateColors();
+          searchPoints.updateColors();
           filterFieldInp.value = recField;
           filterInputHandler();
           setRecStatus('green', 'Success');
@@ -620,57 +623,46 @@ function proceedWithDataset(items, index) {
     highlightPoint.fill([itemIdx], 1, 26);
   }
 
-  // Initial tooltip state
-  const tooltipState = { display: 'none', data: {} };
-
-  const tooltipTemplate = document.createRange().createContextualFragment('<div id="tooltip" style="display: none; position: absolute; pointer-events: none; font-size: 13px; width: 200px; text-align: center; line-height: 1; padding: 6px; background: white; font-family: sans-serif;"/>');
-  document.body.append(tooltipTemplate);
-
-  const $tooltip = document.querySelector('#tooltip');
-
-  function updateTooltip() {
-    $tooltip.style.display = tooltipState.display;
-    while ($tooltip.firstChild) {
-      $tooltip.removeChild($tooltip.firstChild);
+  function fontColorFromBg(bgColor) {
+    if (bgColor[0] * 0.3 + bgColor[1] * 0.586 + bgColor[2] * 0.114 > 0.6) {
+      return 'black';
     }
-    $tooltip.innerHTML += `<div style="padding: 4px; margin-bottom: 4px; background: ${toRGB(itemColor(tooltipState.data, tooltipState.fromFilter))};"><b>${tooltipState.data.t_name}</b></div>`;
-    Object.keys(tooltipState.data).forEach((field) => {
-      if (field === 't_name' || field === 'flags') {
+    return 'white';
+  }
+
+  function showTooltip(mousePosition, item) {
+    tooltip.style.display = 'block';
+    while (tooltipRows.firstChild) {
+      tooltipRows.removeChild(tooltipRows.firstChild);
+    }
+    const cl = itemColor(item);
+    tooltipTitle.style.color = fontColorFromBg(cl);
+    tooltipTitle.style.background = toRGB(cl);
+    tooltipTitle.innerHTML = item.t_name;
+    Object.keys(item).forEach((field) => {
+      if (field === 't_name' || field === 'flags' || field === 'position' || field === 'idx') {
         return;
       }
       let key = field;
       if (isNormNumericField(key) || isSearchField(key)) {
         key = unprefixField(key);
       }
-      let val = tooltipState.data[field];
+      let val = item[field];
       // Format floats
       if (Number(val) === val && val % 1 !== 0) {
         val = val.toFixed(4);
       }
-      if (field === 'position') {
-        val = [val[0].toFixed(4), val[1].toFixed(4)];
-      }
-      $tooltip.innerHTML += `<div style="padding: 4px;">${key}: ${val}</div>`;
+      tooltipRows.innerHTML += `<div style="padding: 4px;">${key}: ${val}</div>`;
     });
-    $tooltip.style.left = `${tooltipState.left}px`;
-    $tooltip.style.top = `${tooltipState.top}px`;
-  }
-
-  function showTooltip(mousePosition, datum, fromFilter) {
     const tooltipWidth = 200;
     const xOffset = -tooltipWidth / 2;
     const yOffset = 30;
-    tooltipState.display = 'block';
-    tooltipState.left = mousePosition[0] + xOffset;
-    tooltipState.top = mousePosition[1] + yOffset;
-    tooltipState.data = datum;
-    tooltipState.fromFilter = fromFilter;
-    updateTooltip();
+    tooltip.style.left = `${mousePosition[0] + xOffset}px`;
+    tooltip.style.top = `${mousePosition[1] + yOffset}px`;
   }
 
   function hideTooltip() {
-    tooltipState.display = 'none';
-    updateTooltip();
+    tooltip.style.display = 'none';
   }
 
   view.on('mouseleave', () => {
@@ -678,18 +670,20 @@ function proceedWithDataset(items, index) {
     hideTooltip();
   });
 
-  view.on('mousemove', () => {
+  function updateHighlight() {
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
     const [itemIdx, fromFilter] = getIntersect(mousePosition);
     if (itemIdx) {
       highlightItem(itemIdx, fromFilter);
-      showTooltip(mousePosition, items[itemIdx], fromFilter);
+      showTooltip(mousePosition, items[itemIdx]);
     } else {
       removeHighlights();
       hideTooltip();
     }
-  });
+  }
+
+  view.on('mousemove', updateHighlight);
 
   view.on('dblclick', () => {
     const flag = flagNameInp.value;
@@ -703,7 +697,7 @@ function proceedWithDataset(items, index) {
       return;
     }
     flags.applyFlagToItem(flag, items[itemIdx], index);
-    updateTooltip();
+    updateHighlight();
     updateRecButtonStatus();
   });
 }
