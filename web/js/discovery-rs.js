@@ -129,6 +129,27 @@ const circleSprite = new THREE.TextureLoader().load(
   'res/circle-sprite.png',
 );
 
+function appendOption(element, value, html) {
+  const opt = document.createElement('option');
+  opt.value = value;
+  if (html) {
+    opt.innerHTML = html;
+  }
+  element.appendChild(opt);
+}
+
+function unprefixField(field) {
+  return field.substr(2);
+}
+
+function isNormNumericField(field) {
+  return field.startsWith('n_');
+}
+
+function isSearchField(field) {
+  return field.startsWith('t_');
+}
+
 function proceedWithDataset(items, index) {
   const flags = new class Flags {
     constructor() {
@@ -152,9 +173,7 @@ function proceedWithDataset(items, index) {
     updateDatalist() {
       flagNameDatalist.innerHTML = '';
       Object.keys(this.container).forEach((flag) => {
-        const opt = document.createElement('option');
-        opt.value = flag;
-        flagNameDatalist.appendChild(opt);
+        appendOption(flagNameDatalist, flag, null);
       });
     }
 
@@ -192,25 +211,22 @@ function proceedWithDataset(items, index) {
       window.localStorage.setItem(this.lsFlagsItem, JSON.stringify(this.container));
     }
   }();
-
   flags.applyFlagsToItems(items);
+
+  // Hide loader
   document.querySelector('#loader-outer').style.display = 'none';
 
+  // Fill search field select options
   // eslint-disable-next-line no-underscore-dangle
   Object.keys(index._fieldIds).forEach((field) => {
-    const opt = document.createElement('option');
-    opt.value = field;
-    opt.innerHTML = field.substr(2);
-    searchFieldInp.appendChild(opt);
+    appendOption(searchFieldInp, field, unprefixField(field));
   });
 
+  // Fill color field select options
   Object.keys(items[0]).forEach((field) => {
-    if (field.startsWith('n_')) {
-      const opt = document.createElement('option');
-      opt.value = field;
-      opt.innerHTML = field.substr(2);
-      colorFieldInp.appendChild(opt);
-      filterFieldInp.appendChild(opt.cloneNode(true));
+    if (isNormNumericField(field)) {
+      appendOption(colorFieldInp, field, unprefixField(field));
+      appendOption(filterFieldInp, field, unprefixField(field));
     }
   });
 
@@ -561,11 +577,8 @@ function proceedWithDataset(items, index) {
             }
           });
           if (!found) {
-            const opt = document.createElement('option');
-            opt.value = recField;
-            opt.innerHTML = recField;
-            colorFieldInp.appendChild(opt);
-            filterFieldInp.appendChild(opt.cloneNode(true));
+            appendOption(colorFieldInp, recField, recField);
+            appendOption(filterFieldInp, recField, recField);
           }
           colorFieldInp.value = recField;
           updateColors();
@@ -630,8 +643,8 @@ function proceedWithDataset(items, index) {
         return;
       }
       let key = field;
-      if (key.startsWith('n_') || key.startsWith('t_')) {
-        key = key.substr(2);
+      if (isNormNumericField(key) || isSearchField(key)) {
+        key = unprefixField(key);
       }
       let val = tooltipState.data[field];
       // Format floats
@@ -711,7 +724,7 @@ JSZipUtils.getBinaryContent(`data/${dsName}.zip`, (err, data) => {
         delete row.x;
         delete row.y;
         Object.keys(row).forEach((field) => {
-          if (field.startsWith('n_')) {
+          if (isNormNumericField(field)) {
             row[field] = +row[field];
           }
         });
