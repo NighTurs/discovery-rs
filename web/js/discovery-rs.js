@@ -129,50 +129,76 @@ const circleSprite = new THREE.TextureLoader().load(
   'res/circle-sprite.png',
 );
 
-const lsFlagsItem = `${ds}-flags`;
+const flags = new class Flags {
+  constructor() {
+    this.lsFlagsItem = `${ds}-flags`;
+    let json = window.localStorage.getItem(this.lsFlagsItem);
+    if (!json) {
+      json = '{}';
+    }
+    this.container = JSON.parse(json);
+  }
 
-let flags = window.localStorage.getItem(lsFlagsItem);
-if (!flags) {
-  flags = '{}';
-}
-flags = JSON.parse(flags);
+  static updateItemInIndex(item, index) {
+    index.remove(item);
+    item.t_flags = item.flags.join(', ');
+    if (item.t_flags.length === 0) {
+      delete item.t_flags;
+    }
+    index.add(item);
+  }
+
+  updateDatalist() {
+    flagNameDatalist.innerHTML = '';
+    Object.keys(this.container).forEach((flag) => {
+      const opt = document.createElement('option');
+      opt.value = flag;
+      flagNameDatalist.appendChild(opt);
+    });
+  }
+
+  applyFlagToItem(flag, item, index) {
+    if (item.flags.includes(flag)) {
+      item.flags = item.flags.filter((x) => x !== flag);
+      this.container[flag] = this.container[flag].filter((x) => x !== item.idx);
+      if (this.container[flag].length === 0) {
+        delete this.container[flag];
+      }
+    } else {
+      item.flags.push(flag);
+      if (!Object.prototype.hasOwnProperty.call(this.container, flag)) {
+        this.container[flag] = [];
+      }
+      this.container[flag].push(item.idx);
+    }
+    Flags.updateItemInIndex(item, index);
+    this.updateLocalStorage();
+    this.updateDatalist();
+  }
+
+  applyFlagsToItems(items, index) {
+    Object.keys(this.container).forEach((flag) => {
+      this.container[flag].forEach((idx) => {
+        const item = items[idx];
+        item.flags.push(flag);
+        Flags.updateItemInIndex(item, index);
+      });
+    });
+    this.updateDatalist();
+  }
+
+  updateLocalStorage() {
+    window.localStorage.setItem(this.lsFlagsItem, JSON.stringify(this.container));
+  }
+}();
 
 let generatedPoints = null;
 let index = null;
 let loadingInc = 0;
 
-function updateFlagInIndex(item) {
-  index.remove(item);
-  item.t_flags = item.flags.join(', ');
-  if (item.t_flags.length === 0) {
-    delete item.t_flags;
-  }
-  index.add(item);
-}
-
-function updateFlagsDatalist() {
-  flagNameDatalist.innerHTML = '';
-  Object.keys(flags).forEach((flag) => {
-    const opt = document.createElement('option');
-    opt.value = flag;
-    flagNameDatalist.appendChild(opt);
-  });
-}
-
-function applyFlagsFromLS() {
-  Object.keys(flags).forEach((flag) => {
-    flags[flag].forEach((idx) => {
-      const item = generatedPoints[idx];
-      item.flags.push(flag);
-      updateFlagInIndex(item);
-    });
-  });
-  updateFlagsDatalist();
-}
-
 function checkIfLoading() {
   if (loadingInc === 2) {
-    applyFlagsFromLS();
+    flags.applyFlagsToItems(generatedPoints, index);
     document.querySelector('#loader-outer').style.display = 'none';
   }
 }
@@ -451,7 +477,7 @@ function loadPoints() {
 
   function updateRecButtonStatus() {
     if (flagNameInp.value.length > 0
-      && Object.prototype.hasOwnProperty.call(flags, flagNameInp.value)
+      && Object.prototype.hasOwnProperty.call(flags.container, flagNameInp.value)
       && recServerInp.value.length > 0
       && recServerInp.checkValidity()) {
       recButton.disabled = false;
@@ -523,10 +549,6 @@ function loadPoints() {
     }
   });
 
-  function updateFlagsLocalStorage() {
-    window.localStorage.setItem(lsFlagsItem, JSON.stringify(flags));
-  }
-
   function setRecStatus(color, msg) {
     recStatus.innerHTML = msg;
     recStatus.style.color = color;
@@ -537,7 +559,7 @@ function loadPoints() {
     const recField = `${flagNameInp.value}_recommend`;
     fetch(recServerInp.value, {
       method: 'POST',
-      body: JSON.stringify({ ds, idxs: flags[flagNameInp.value] }),
+      body: JSON.stringify({ ds, idxs: flags.container[flagNameInp.value] }),
       headers: new Headers({
         'Content-Type': 'application/json',
       }),
@@ -686,22 +708,7 @@ function loadPoints() {
     if (!datum) {
       return;
     }
-    if (datum.flags.includes(flag)) {
-      datum.flags = datum.flags.filter((x) => x !== flag);
-      flags[flag] = flags[flag].filter((x) => x !== datum.idx);
-      if (flags[flag].length === 0) {
-        delete flags[flag];
-      }
-    } else {
-      datum.flags.push(flag);
-      if (!Object.prototype.hasOwnProperty.call(flags, flag)) {
-        flags[flag] = [];
-      }
-      flags[flag].push(datum.idx);
-    }
-    updateFlagInIndex(datum);
-    updateFlagsLocalStorage();
-    updateFlagsDatalist();
+    flags.applyFlagToItem(flag, datum, index);
     updateTooltip();
     updateRecButtonStatus();
   });
