@@ -150,6 +150,53 @@ function isSearchField(field) {
   return field.startsWith('t_');
 }
 
+// Returns [r, g, b] array, but values scaled to [0:1]
+const getColor = (function getColorFunc() {
+  const interpolateOranges = (function interpolateColors(colors) {
+    const n = colors.length;
+    let r = new Array(n);
+    let g = new Array(n);
+    let b = new Array(n);
+    let color = null;
+    for (let i = 0; i < n; ++i) {
+      color = d3.rgb(colors[i]);
+      r[i] = (color.r / 255) || 0;
+      g[i] = (color.g / 255) || 0;
+      b[i] = (color.b / 255) || 0;
+    }
+    r = d3.interpolateBasis(r);
+    g = d3.interpolateBasis(g);
+    b = d3.interpolateBasis(b);
+    return (t) => [r(t), g(t), b(t)];
+  }(d3.schemeOranges[9]));
+
+  function adjustBalance(v) {
+    const balance = colorBalanceInp.value;
+    let p = 0;
+    if (v >= balance) {
+      p = 1 - balance;
+    } else {
+      p = balance;
+    }
+    return 0.5 + ((v - balance) * 0.5) / p;
+  }
+
+  function colorFromNormNumeric(v) {
+    return interpolateOranges(1 - adjustBalance(v));
+  }
+
+  return (point, fromFilter) => {
+    if (fromFilter && searchColorFindingsInp.checked) {
+      return findingsColor;
+    }
+    return colorFromNormNumeric(point[colorFieldInp.value]);
+  };
+}());
+
+function toRGB(scaledColor) {
+  return `${d3.rgb(scaledColor[0] * 255, scaledColor[1] * 255, scaledColor[2] * 255)}`;
+}
+
 function proceedWithDataset(items, index) {
   const flags = new class Flags {
     constructor() {
@@ -229,48 +276,6 @@ function proceedWithDataset(items, index) {
       appendOption(filterFieldInp, field, unprefixField(field));
     }
   });
-
-  function interpolateColors(colors) {
-    const n = colors.length;
-    let r = new Array(n);
-    let g = new Array(n);
-    let b = new Array(n);
-    let color = null;
-    for (let i = 0; i < n; ++i) {
-      color = d3.rgb(colors[i]);
-      r[i] = (color.r / 255) || 0;
-      g[i] = (color.g / 255) || 0;
-      b[i] = (color.b / 255) || 0;
-    }
-    r = d3.interpolateBasis(r);
-    g = d3.interpolateBasis(g);
-    b = d3.interpolateBasis(b);
-    return (t) => [r(t), g(t), b(t)];
-  }
-
-  const interpolateOranges = interpolateColors(d3.schemeOranges[9]);
-
-  function colorFromPct(v) {
-    const balance = colorBalanceInp.value;
-    let p = 0;
-    if (v >= balance) {
-      p = 1 - balance;
-    } else {
-      p = balance;
-    }
-    return interpolateOranges(1 - (0.5 + ((v - balance) * 0.5) / p));
-  }
-
-  function getColor(point, fromFilter) {
-    if (fromFilter && searchColorFindingsInp.checked) {
-      return findingsColor;
-    }
-    return colorFromPct(point[colorFieldInp.value]);
-  }
-
-  function toRGB(color) {
-    return `${d3.rgb(color[0] * 255, color[1] * 255, color[2] * 255)}`;
-  }
 
   function applyFilter(point) {
     return filterInp.value <= point[filterFieldInp.value];
