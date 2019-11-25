@@ -32,18 +32,18 @@ const fov = 20;
 const near = 2;
 const far = 600;
 
-const ds = (function resolveDataset() {
+const dsName = (function resolveDataset() {
   const urlParams = new URLSearchParams(window.location.search);
-  let lDs = urlParams.get('ds');
+  let ds = urlParams.get('ds');
 
-  if (!lDs) {
-    lDs = datasetInp.value;
+  if (!ds) {
+    ds = datasetInp.value;
   }
 
-  if (datasetInp.value !== lDs) {
-    datasetInp.value = lDs;
+  if (datasetInp.value !== ds) {
+    datasetInp.value = ds;
   }
-  return lDs;
+  return ds;
 }());
 
 datasetInp.addEventListener('change', () => {
@@ -129,84 +129,73 @@ const circleSprite = new THREE.TextureLoader().load(
   'res/circle-sprite.png',
 );
 
-const flags = new class Flags {
-  constructor() {
-    this.lsFlagsItem = `${ds}-flags`;
-    let json = window.localStorage.getItem(this.lsFlagsItem);
-    if (!json) {
-      json = '{}';
-    }
-    this.container = JSON.parse(json);
-  }
-
-  static updateItemInIndex(item, index) {
-    index.remove(item);
-    item.t_flags = item.flags.join(', ');
-    if (item.t_flags.length === 0) {
-      delete item.t_flags;
-    }
-    index.add(item);
-  }
-
-  updateDatalist() {
-    flagNameDatalist.innerHTML = '';
-    Object.keys(this.container).forEach((flag) => {
-      const opt = document.createElement('option');
-      opt.value = flag;
-      flagNameDatalist.appendChild(opt);
-    });
-  }
-
-  applyFlagToItem(flag, item, index) {
-    if (item.flags.includes(flag)) {
-      item.flags = item.flags.filter((x) => x !== flag);
-      this.container[flag] = this.container[flag].filter((x) => x !== item.idx);
-      if (this.container[flag].length === 0) {
-        delete this.container[flag];
+function proceedWithDataset(items, index) {
+  const flags = new class Flags {
+    constructor() {
+      this.lsFlagsItem = `${dsName}-flags`;
+      let json = window.localStorage.getItem(this.lsFlagsItem);
+      if (!json) {
+        json = '{}';
       }
-    } else {
-      item.flags.push(flag);
-      if (!Object.prototype.hasOwnProperty.call(this.container, flag)) {
-        this.container[flag] = [];
-      }
-      this.container[flag].push(item.idx);
+      this.container = JSON.parse(json);
     }
-    Flags.updateItemInIndex(item, index);
-    this.updateLocalStorage();
-    this.updateDatalist();
-  }
 
-  applyFlagsToItems(items, index) {
-    Object.keys(this.container).forEach((flag) => {
-      this.container[flag].forEach((idx) => {
-        const item = items[idx];
-        item.flags.push(flag);
-        Flags.updateItemInIndex(item, index);
+    static updateItemInIndex(item) {
+      index.remove(item);
+      item.t_flags = item.flags.join(', ');
+      if (item.t_flags.length === 0) {
+        delete item.t_flags;
+      }
+      index.add(item);
+    }
+
+    updateDatalist() {
+      flagNameDatalist.innerHTML = '';
+      Object.keys(this.container).forEach((flag) => {
+        const opt = document.createElement('option');
+        opt.value = flag;
+        flagNameDatalist.appendChild(opt);
       });
-    });
-    this.updateDatalist();
-  }
+    }
 
-  updateLocalStorage() {
-    window.localStorage.setItem(this.lsFlagsItem, JSON.stringify(this.container));
-  }
-}();
+    applyFlagToItem(flag, item) {
+      if (item.flags.includes(flag)) {
+        item.flags = item.flags.filter((x) => x !== flag);
+        this.container[flag] = this.container[flag].filter((x) => x !== item.idx);
+        if (this.container[flag].length === 0) {
+          delete this.container[flag];
+        }
+      } else {
+        item.flags.push(flag);
+        if (!Object.prototype.hasOwnProperty.call(this.container, flag)) {
+          this.container[flag] = [];
+        }
+        this.container[flag].push(item.idx);
+      }
+      Flags.updateItemInIndex(item, index);
+      this.updateLocalStorage();
+      this.updateDatalist();
+    }
 
-let generatedPoints = null;
-let index = null;
-let loadingInc = 0;
+    applyFlagsToItems() {
+      Object.keys(this.container).forEach((flag) => {
+        this.container[flag].forEach((idx) => {
+          const item = items[idx];
+          item.flags.push(flag);
+          Flags.updateItemInIndex(item, index);
+        });
+      });
+      this.updateDatalist();
+    }
 
-function checkIfLoading() {
-  if (loadingInc === 2) {
-    flags.applyFlagsToItems(generatedPoints, index);
-    document.querySelector('#loader-outer').style.display = 'none';
-  }
-}
+    updateLocalStorage() {
+      window.localStorage.setItem(this.lsFlagsItem, JSON.stringify(this.container));
+    }
+  }();
 
-function loadIndex(json) {
-  const data = JSON.parse(json);
-  const fields = Object.keys(data.fieldIds);
-  index = MiniSearch.loadJS(data, { fields, idField: 'idx' });
+  flags.applyFlagsToItems(items);
+  document.querySelector('#loader-outer').style.display = 'none';
+
   // eslint-disable-next-line no-underscore-dangle
   Object.keys(index._fieldIds).forEach((field) => {
     const opt = document.createElement('option');
@@ -214,12 +203,8 @@ function loadIndex(json) {
     opt.innerHTML = field.substr(2);
     searchFieldInp.appendChild(opt);
   });
-  loadingInc++;
-  checkIfLoading();
-}
 
-function loadPoints() {
-  Object.keys(generatedPoints[0]).forEach((field) => {
+  Object.keys(items[0]).forEach((field) => {
     if (field.startsWith('n_')) {
       const opt = document.createElement('option');
       opt.value = field;
@@ -285,11 +270,11 @@ function loadPoints() {
   function addPoints() {
     pointsContainer.remove(...pointsContainer.children);
     const geometry = new THREE.BufferGeometry();
-    const colors = new Float32Array(3 * generatedPoints.length);
-    const vertices = new Float32Array(3 * generatedPoints.length);
+    const colors = new Float32Array(3 * items.length);
+    const vertices = new Float32Array(3 * items.length);
     let aIdx = 0;
     const idxs = [];
-    generatedPoints.forEach((datum, idx) => {
+    items.forEach((datum, idx) => {
       if (!applyFilter(datum)) {
         return;
       }
@@ -377,7 +362,7 @@ function loadPoints() {
       const idxs = [];
       found.forEach((datum) => {
         const idx = +datum.id;
-        const item = generatedPoints[idx];
+        const item = items[idx];
         if (!applyFilter(item)) {
           return;
         }
@@ -441,7 +426,7 @@ function loadPoints() {
 
     for (let i = 0; i < points.idxs.length; i++) {
       const idx = points.idxs[i];
-      const color = getColor(generatedPoints[idx], true);
+      const color = getColor(items[idx], true);
       colors[i * 3] = color[0];
       colors[i * 3 + 1] = color[1];
       colors[i * 3 + 2] = color[2];
@@ -457,7 +442,7 @@ function loadPoints() {
     const colors = points.geometry.getAttribute('color').array;
     for (let i = 0; i < points.idxs.length; i++) {
       const idx = points.idxs[i];
-      const color = getColor(generatedPoints[idx], false);
+      const color = getColor(items[idx], false);
       colors[i * 3] = color[0];
       colors[i * 3 + 1] = color[1];
       colors[i * 3 + 2] = color[2];
@@ -529,7 +514,7 @@ function loadPoints() {
       const sortedIntersects = sortIntersectsByDistanceToRay(intersects);
       const intersect = sortedIntersects[0];
       const idx = pointsObj.idxs[intersect.index];
-      const datum = generatedPoints[idx];
+      const datum = items[idx];
       return [datum, fromFilter];
     }
     return [null, fromFilter];
@@ -559,15 +544,15 @@ function loadPoints() {
     const recField = `${flagNameInp.value}_recommend`;
     fetch(recServerInp.value, {
       method: 'POST',
-      body: JSON.stringify({ ds, idxs: flags.container[flagNameInp.value] }),
+      body: JSON.stringify({ ds: dsName, idxs: flags.container[flagNameInp.value] }),
       headers: new Headers({
         'Content-Type': 'application/json',
       }),
     }).then((response) => {
       if (response.ok) {
         response.json().then((data) => {
-          for (let i = 0; i < generatedPoints.length; i++) {
-            generatedPoints[i][recField] = data.recs[i];
+          for (let i = 0; i < items.length; i++) {
+            items[i][recField] = data.recs[i];
           }
           let found = false;
           [...colorFieldInp.children].forEach((opt) => {
@@ -712,18 +697,15 @@ function loadPoints() {
     updateTooltip();
     updateRecButtonStatus();
   });
-
-  loadingInc++;
-  checkIfLoading();
 }
 
-JSZipUtils.getBinaryContent(`data/${ds}.zip`, (err, data) => {
+JSZipUtils.getBinaryContent(`data/${dsName}.zip`, (err, data) => {
   if (err) {
     throw err;
   }
   JSZip.loadAsync(data).then((zip) => {
-    zip.file('web.csv').async('string').then((dsCsv) => {
-      generatedPoints = d3.csvParse(dsCsv, (row) => {
+    const items = zip.file('web.csv').async('string').then((dsCsv) => {
+      const lItems = d3.csvParse(dsCsv, (row) => {
         row.idx = +row.idx;
         row.position = [+row.x, +row.y];
         delete row.x;
@@ -736,10 +718,14 @@ JSZipUtils.getBinaryContent(`data/${ds}.zip`, (err, data) => {
         row.flags = [];
         return row;
       });
-      loadPoints();
+      return lItems;
     });
-    zip.file('web_index.json').async('string').then((indexStr) => {
-      loadIndex(indexStr);
+    const index = zip.file('web_index.json').async('string').then((json) => {
+      const js = JSON.parse(json);
+      const fields = Object.keys(js.fieldIds);
+      const lIndex = MiniSearch.loadJS(js, { fields, idField: 'idx' });
+      return lIndex;
     });
+    Promise.all([items, index]).then((ds) => { proceedWithDataset(...ds); });
   });
 });
