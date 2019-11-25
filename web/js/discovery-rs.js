@@ -446,36 +446,26 @@ function proceedWithDataset(items, index) {
   fillAllPoints();
   three.animate();
 
-  function pointsSizeInputHandler(newVal) {
-    pointsSizeInp.value = newVal;
+  pointsSizeInp.addEventListener('input', () => {
+    const newVal = pointsSizeInp.value;
     pointsSizeVal.innerHTML = newVal;
     allPoints.updateSize(newVal);
     searchPoints.updateSize(newVal);
-  }
+  });
 
-  pointsSizeInp.addEventListener('input', (event) => pointsSizeInputHandler(+event.target.value));
-
-  function pointsOpacityInputHandler(newVal) {
-    pointsOpacityInp.value = newVal;
+  pointsOpacityInp.addEventListener('input', () => {
+    const newVal = pointsOpacityInp.value;
     pointsOpacityVal.innerHTML = newVal;
     allPoints.updateOpacity(newVal);
     searchPoints.updateOpacity(newVal);
-  }
-
-  pointsOpacityInp.addEventListener('input', (event) => pointsOpacityInputHandler(+event.target.value));
+  });
 
   function switchHideOthers(newVal) {
     allPoints.updateVisible(!newVal);
     searchHideOthersInp.checked = newVal;
   }
 
-  function searchHideOthersInputHandler() {
-    switchHideOthers(searchHideOthersInp.checked);
-  }
-
-  searchHideOthersInp.addEventListener('input', () => searchHideOthersInputHandler());
-
-  function addSearchPoints() {
+  function updateSearchPoints() {
     const searchQuery = searchInp.value;
     searchPoints.clear();
     if (!searchQuery) {
@@ -493,9 +483,8 @@ function proceedWithDataset(items, index) {
   }
 
   function searchInputHandler() {
-    const newVal = searchInp.value;
-    if (newVal) {
-      addSearchPoints();
+    if (searchInp.value) {
+      updateSearchPoints();
       switchHideOthers(true);
     } else {
       switchHideOthers(false);
@@ -505,32 +494,30 @@ function proceedWithDataset(items, index) {
 
   searchInp.addEventListener('input', () => searchInputHandler());
   searchFieldInp.addEventListener('input', () => searchInputHandler());
+  searchHideOthersInp.addEventListener('input', () => {
+    switchHideOthers(searchHideOthersInp.checked);
+  });
+  searchColorFindingsInp.addEventListener('input', () => searchPoints.updateColors());
 
   function filterInputHandler() {
-    const newVal = filterInp.value;
-    filterVal.innerHTML = newVal;
+    filterVal.innerHTML = filterInp.value;
     fillAllPoints();
-    addSearchPoints();
+    updateSearchPoints();
   }
 
   filterInp.addEventListener('input', () => filterInputHandler());
   filterFieldInp.addEventListener('input', () => filterInputHandler());
-  searchColorFindingsInp.addEventListener('input', () => searchPoints.updateColors());
 
-  function updateColors() {
+  colorFieldInp.addEventListener('input', () => {
     searchPoints.updateColors();
     allPoints.updateColors();
-  }
+  });
 
-  colorFieldInp.addEventListener('input', () => updateColors());
-
-  function colorBalanceInputHandler() {
-    const newVal = colorBalanceInp.value;
-    colorBalanceVal.innerHTML = newVal;
-    updateColors();
-  }
-
-  colorBalanceInp.addEventListener('input', () => colorBalanceInputHandler());
+  colorBalanceInp.addEventListener('input', () => {
+    colorBalanceVal.innerHTML = colorBalanceInp.value;
+    searchPoints.updateColors();
+    allPoints.updateColors();
+  });
 
   function updateRecButtonStatus() {
     if (flagNameInp.value.length > 0
