@@ -51,20 +51,29 @@ datasetInp.addEventListener('change', () => {
   window.location = `${window.location.origin + window.location.pathname}?ds=${datasetInp.value}`;
 });
 
-const [camera, renderer] = (function setupThree() {
-  const lCamera = new THREE.PerspectiveCamera(
-    fov,
-    width / height,
-    near,
-    far + 1,
-  );
-  const lRenderer = new THREE.WebGLRenderer();
-  lRenderer.setSize(width, height);
-  document.body.appendChild(lRenderer.domElement);
-  return [lCamera, lRenderer];
-}());
+const three = new class {
+  constructor() {
+    this.camera = new THREE.PerspectiveCamera(
+      fov,
+      width / height,
+      near,
+      far + 1,
+    );
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize(width, height);
+    document.body.appendChild(this.renderer.domElement);
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0000000);
+  }
 
-const view = d3.select(renderer.domElement);
+  // Three.js render loop
+  animate() {
+    requestAnimationFrame(this.animate.bind(this));
+    this.renderer.render(this.scene, this.camera);
+  }
+}();
+
+const view = d3.select(three.renderer.domElement);
 
 (function setupZoom() {
   function toRadians(angle) {
@@ -94,7 +103,7 @@ const view = d3.select(renderer.domElement);
     const x = -(d3Transform.x - width / 2) / scale;
     const y = (d3Transform.y - height / 2) / scale;
     const z = getZFromScale(scale);
-    camera.position.set(x, y, z);
+    three.camera.position.set(x, y, z);
   }
 
   const zoom = d3.zoom()
@@ -109,7 +118,7 @@ const view = d3.select(renderer.domElement);
     const initialScale = getScaleFromZ(far);
     const initialTransform = d3.zoomIdentity.translate(width / 2, height / 2).scale(initialScale);
     zoom.transform(view, initialTransform);
-    camera.position.set(0, 0, far);
+    three.camera.position.set(0, 0, far);
   }
   initZoom();
 
@@ -117,9 +126,9 @@ const view = d3.select(renderer.domElement);
     width = window.innerWidth;
     height = window.innerHeight;
 
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
+    three.renderer.setSize(width, height);
+    three.camera.aspect = width / height;
+    three.camera.updateProjectionMatrix();
     // Resets zoom to default
     initZoom();
   });
@@ -195,6 +204,10 @@ const getColor = (function getColorFunc() {
 
 function toRGB(scaledColor) {
   return `${d3.rgb(scaledColor[0] * 255, scaledColor[1] * 255, scaledColor[2] * 255)}`;
+}
+
+function applyFilter(item) {
+  return filterInp.value <= item[filterFieldInp.value];
 }
 
 function proceedWithDataset(items, index) {
@@ -277,16 +290,10 @@ function proceedWithDataset(items, index) {
     }
   });
 
-  function applyFilter(point) {
-    return filterInp.value <= point[filterFieldInp.value];
-  }
-
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0000000);
   const pointsContainer = new THREE.Object3D();
   const searchContainer = new THREE.Object3D();
-  scene.add(pointsContainer);
-  scene.add(searchContainer);
+  three.scene.add(pointsContainer);
+  three.scene.add(searchContainer);
 
   function addPoints() {
     pointsContainer.remove(...pointsContainer.children);
@@ -327,12 +334,7 @@ function proceedWithDataset(items, index) {
 
   addPoints();
 
-  // Three.js render loop
-  function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-  }
-  animate();
+  three.animate();
 
   function pointsSizeInputHandler(newVal) {
     pointsSizeInp.value = newVal;
@@ -520,7 +522,7 @@ function proceedWithDataset(items, index) {
 
   function getIntersect(mousePosition) {
     const mouseVector = mouseToThree(...mousePosition);
-    raycaster.setFromCamera(mouseVector, camera);
+    raycaster.setFromCamera(mouseVector, three.camera);
     let pointsObj = null;
     let fromFilter = false;
     if (pointsContainer.visible === true) {
@@ -601,7 +603,7 @@ function proceedWithDataset(items, index) {
   };
 
   const hoverContainer = new THREE.Object3D();
-  scene.add(hoverContainer);
+  three.scene.add(hoverContainer);
 
   function removeHighlights() {
     hoverContainer.remove(...hoverContainer.children);
