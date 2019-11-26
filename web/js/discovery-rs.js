@@ -496,8 +496,8 @@ function proceedWithDataset(items, index) {
     }
   }
 
-  searchInp.addEventListener('input', () => searchInputHandler());
-  searchFieldInp.addEventListener('input', () => searchInputHandler());
+  searchInp.addEventListener('input', searchInputHandler);
+  searchFieldInp.addEventListener('input', searchInputHandler);
   searchHideOthersInp.addEventListener('input', () => {
     switchHideOthers(searchHideOthersInp.checked);
   });
@@ -509,8 +509,8 @@ function proceedWithDataset(items, index) {
     updateSearchPoints();
   }
 
-  filterInp.addEventListener('input', () => filterInputHandler());
-  filterFieldInp.addEventListener('input', () => filterInputHandler());
+  filterInp.addEventListener('input', filterInputHandler);
+  filterFieldInp.addEventListener('input', filterInputHandler);
 
   colorFieldInp.addEventListener('input', () => {
     searchPoints.updateColors();
@@ -534,7 +534,7 @@ function proceedWithDataset(items, index) {
     }
   }
 
-  flagNameInp.addEventListener('input', () => updateRecButtonStatus());
+  flagNameInp.addEventListener('input', updateRecButtonStatus);
 
   const raycaster = new THREE.Raycaster();
   raycaster.params.Points.threshold = 10;
