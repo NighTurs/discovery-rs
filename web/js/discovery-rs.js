@@ -630,6 +630,42 @@ function proceedWithDataset(items, index) {
     return 'white';
   }
 
+  function tooltipPosition(mousePosition, tWidth, tHeight, forcedOrient) {
+    const x = mousePosition[0];
+    const y = mousePosition[1];
+    const offset = 30;
+    let cands = [
+      [x - tWidth / 2, y + offset, 0], // bottom
+      [x - tWidth / 2, y - tHeight - offset, 1], // top
+      [x + offset, y - tHeight / 2, 2], // right
+      [x - tWidth - offset, y - tHeight / 2, 3], // left
+    ];
+    // Adjust to fit in window
+    cands = cands.map((c) => {
+      c[0] = Math.min(width - tWidth, Math.max(0, c[0]));
+      c[1] = Math.min(height - tHeight, Math.max(0, c[1]));
+      return c;
+    });
+    if (forcedOrient !== null) {
+      return cands[forcedOrient];
+    }
+    // Filter out overlaps within 'offset' radius of mouse position
+    cands = cands.filter((c) => (x + offset <= c[0]) || (x - offset >= c[0] + tWidth)
+      || (y + offset <= c[1]) || (y - offset >= c[1] + tHeight));
+    if (cands.length === 0) {
+      return [0, 0, 0];
+    }
+    return cands[0];
+  }
+
+  function getTime() {
+    return new Date().getTime();
+  }
+
+  const tooltipOrientChangeThres = 500;
+  let timeTooltipOrientChange = getTime() - tooltipOrientChangeThres;
+  let lastTooltipOrient = 0;
+
   function showTooltip(mousePosition, item) {
     tooltip.style.display = 'block';
     while (tooltipRows.firstChild) {
@@ -654,11 +690,27 @@ function proceedWithDataset(items, index) {
       }
       tooltipRows.innerHTML += `<div style="padding: 4px;">${key}: ${val}</div>`;
     });
-    const tooltipWidth = 200;
-    const xOffset = -tooltipWidth / 2;
-    const yOffset = 30;
-    tooltip.style.left = `${mousePosition[0] + xOffset}px`;
-    tooltip.style.top = `${mousePosition[1] + yOffset}px`;
+
+    const time = getTime();
+    const timePassed = time - timeTooltipOrientChange;
+    let forcedOrient;
+    if (timePassed < tooltipOrientChangeThres) {
+      forcedOrient = lastTooltipOrient;
+    } else {
+      forcedOrient = null;
+    }
+    const [left, top, orient] = tooltipPosition(
+      mousePosition,
+      tooltip.offsetWidth,
+      tooltip.offsetHeight,
+      forcedOrient,
+    );
+    if (lastTooltipOrient !== orient) {
+      timeTooltipOrientChange = time;
+    }
+    lastTooltipOrient = orient;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
   }
 
   function hideTooltip() {
