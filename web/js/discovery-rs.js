@@ -1,4 +1,5 @@
 const toolbar = document.querySelector('#toolbar');
+const toolbarToggle = document.querySelector('#toolbar-toggle');
 const datasetInp = document.querySelector('#dataset');
 
 const pointsSizeInp = document.querySelector('#points-size');
@@ -34,6 +35,14 @@ let height = window.innerHeight;
 const fov = 20;
 const near = 2;
 const far = 600;
+
+toolbarToggle.addEventListener('click', () => {
+  if (toolbar.style.display === '') {
+    toolbar.style.display = 'none';
+  } else {
+    toolbar.style.display = '';
+  }
+});
 
 const dsName = (function resolveDataset() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -718,7 +727,7 @@ function proceedWithDataset(items, index) {
     tooltip.style.display = 'none';
   }
 
-    function updateHighlightWithTooltip() {
+  function updateHighlightWithTooltip() {
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
     const [itemIdx, fromFilter] = getIntersect(mousePosition);
@@ -735,14 +744,14 @@ function proceedWithDataset(items, index) {
     removeHighlight();
   }
 
-  // Need to capture it on whole window. 
+  // Need to capture it on whole window.
   // During pan, event will be consumed by zoom otherwise.
   d3.select(window).on('mousemove', updateHighlightWithTooltip, true);
 
   view.on('mouseleave', removeHighlightWithTooltip);
   toolbar.addEventListener('mousemove', removeHighlightWithTooltip);
   toolbar.addEventListener('mouseup', removeHighlightWithTooltip);
-  
+
   view.on('dblclick', () => {
     const flag = flagNameInp.value;
     if (flag.length === 0) {
