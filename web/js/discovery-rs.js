@@ -1,3 +1,4 @@
+const toolbar = document.querySelector('#toolbar');
 const datasetInp = document.querySelector('#dataset');
 
 const pointsSizeInp = document.querySelector('#points-size');
@@ -609,12 +610,12 @@ function proceedWithDataset(items, index) {
     });
   };
 
-  function removeHighlights() {
+  function removeHighlight() {
     highlightPoint.clear();
   }
 
   function highlightItem(itemIdx, fromFilter) {
-    removeHighlights();
+    removeHighlight();
     if (fromFilter) {
       highlightPoint.colorFunc = searchItemColor;
     } else {
@@ -717,12 +718,7 @@ function proceedWithDataset(items, index) {
     tooltip.style.display = 'none';
   }
 
-  view.on('mouseleave', () => {
-    removeHighlights();
-    hideTooltip();
-  });
-
-  function updateHighlight() {
+    function updateHighlightWithTooltip() {
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
     const [itemIdx, fromFilter] = getIntersect(mousePosition);
@@ -730,13 +726,23 @@ function proceedWithDataset(items, index) {
       highlightItem(itemIdx, fromFilter);
       showTooltip(mousePosition, items[itemIdx]);
     } else {
-      removeHighlights();
-      hideTooltip();
+      removeHighlight();
     }
   }
 
-  view.on('mousemove', updateHighlight);
+  function removeHighlightWithTooltip() {
+    hideTooltip();
+    removeHighlight();
+  }
 
+  // Need to capture it on whole window. 
+  // During pan, event will be consumed by zoom otherwise.
+  d3.select(window).on('mousemove', updateHighlightWithTooltip, true);
+
+  view.on('mouseleave', removeHighlightWithTooltip);
+  toolbar.addEventListener('mousemove', removeHighlightWithTooltip);
+  toolbar.addEventListener('mouseup', removeHighlightWithTooltip);
+  
   view.on('dblclick', () => {
     const flag = flagNameInp.value;
     if (flag.length === 0) {
@@ -749,7 +755,7 @@ function proceedWithDataset(items, index) {
       return;
     }
     flags.applyFlagToItem(flag, items[itemIdx], index);
-    updateHighlight();
+    updateHighlightWithTooltip();
     updateRecButtonStatus();
   });
 }
