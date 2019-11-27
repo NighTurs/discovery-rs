@@ -27,10 +27,11 @@
                 <legend>Points</legend>
                 <div class="flex-a-c control">
                     <span class="label">Dataset</span>
-                    <select id="dataset">
+                    <select id="dataset" autocomplete="off">
                         <option value="lastfm" selected>Last.fm</option>
                         <option value="ml">MovieLens</option>
                         <option value="gbook">GoodBooks</option>
+                        <option value="upload">Upload</option>
                     </select>
                 </div>
                 <div class="flex-c flex-v control">
@@ -122,6 +123,7 @@
         <div id="tooltip-title"></div>
         <div id="tooltip-rows"></div>
     </div>
+    <input id="dataset-upload-button" type="file" value="Upload" accept=".zip">
     <div id="loader-outer">
         <div id="loader"></div>
     </div>

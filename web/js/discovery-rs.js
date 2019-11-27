@@ -30,6 +30,9 @@ const tooltip = document.querySelector('#tooltip');
 const tooltipTitle = document.querySelector('#tooltip-title');
 const tooltipRows = document.querySelector('#tooltip-rows');
 
+const datasetUploadButton = document.querySelector('#dataset-upload-button');
+const loaderOuter = document.querySelector('#loader-outer');
+
 let width = window.innerWidth;
 let height = window.innerHeight;
 const fov = 20;
@@ -44,7 +47,7 @@ toolbarToggle.addEventListener('click', () => {
   }
 });
 
-const dsName = (function resolveDataset() {
+let dsName = (function resolveDataset() {
   const urlParams = new URLSearchParams(window.location.search);
   let ds = urlParams.get('ds');
 
@@ -59,6 +62,13 @@ const dsName = (function resolveDataset() {
 }());
 
 datasetInp.addEventListener('change', () => {
+  if (datasetInp.value === 'upload') {
+    datasetUploadButton.style.display = 'block';
+    datasetUploadButton.click();
+    datasetUploadButton.style.display = 'none';
+    datasetInp.value = dsName;
+    return;
+  }
   // Reload with ds param set
   window.location = `${window.location.origin + window.location.pathname}?ds=${datasetInp.value}`;
 });
@@ -422,15 +432,18 @@ function proceedWithDataset(items, index) {
   flags.applyFlagsToItems(items);
 
   // Hide loader
-  document.querySelector('#loader-outer').style.display = 'none';
+  loaderOuter.style.display = 'none';
 
   // Fill search field select options
+  searchFieldInp.innerHTML = '';
   // eslint-disable-next-line no-underscore-dangle
   Object.keys(index._fieldIds).forEach((field) => {
     appendOption(searchFieldInp, field, unprefixField(field));
   });
 
   // Fill color field select options
+  colorFieldInp.innerHTML = '';
+  filterFieldInp.innerHTML = '';
   Object.keys(items[0]).forEach((field) => {
     if (isNormNumericField(field)) {
       appendOption(colorFieldInp, field, unprefixField(field));
@@ -442,6 +455,7 @@ function proceedWithDataset(items, index) {
     return filterInp.value <= item[filterFieldInp.value];
   }
 
+  three.scene.remove(...three.scene.children);
   const allPoints = new Points(items, itemColor, circleSprite);
   allPoints.addToScene(three.scene);
   const searchPoints = new Points(items, searchItemColor, circleSprite);
@@ -506,6 +520,7 @@ function proceedWithDataset(items, index) {
     }
   }
 
+  searchInp.value = '';
   searchInp.addEventListener('input', searchInputHandler);
   searchFieldInp.addEventListener('input', searchInputHandler);
   searchHideOthersInp.addEventListener('input', () => {
@@ -746,7 +761,12 @@ function proceedWithDataset(items, index) {
 
   // Need to capture it on whole window.
   // During pan, event will be consumed by zoom otherwise.
-  d3.select(window).on('mousemove', updateHighlightWithTooltip, true);
+  d3.select(window).on('mousemove', () => {
+    if (loaderOuter.style.display !== 'none') {
+      return;
+    }
+    updateHighlightWithTooltip();
+  }, true);
 
   view.on('mouseleave', removeHighlightWithTooltip);
   toolbar.addEventListener('mousemove', removeHighlightWithTooltip);
@@ -769,10 +789,7 @@ function proceedWithDataset(items, index) {
   });
 }
 
-JSZipUtils.getBinaryContent(`data/${dsName}.zip`, (err, data) => {
-  if (err) {
-    throw err;
-  }
+function processZipDataset(data) {
   JSZip.loadAsync(data).then((zip) => {
     const items = zip.file('web.csv').async('string').then((dsCsv) => {
       const lItems = d3.csvParse(dsCsv, (row) => {
@@ -798,4 +815,31 @@ JSZipUtils.getBinaryContent(`data/${dsName}.zip`, (err, data) => {
     });
     Promise.all([items, index]).then((ds) => { proceedWithDataset(...ds); });
   });
+}
+
+datasetUploadButton.addEventListener('change', () => {
+  const files = datasetUploadButton.files;
+  if (files.length === 0) {
+    return;
+  }
+  const file = files[0];
+  dsName = file.name;
+  // Remove extension ml.zip -> ml
+  if (dsName.lastIndexOf('.') !== -1) {
+    dsName = dsName.substring(0, dsName.lastIndexOf('.'));
+  }
+  datasetInp.value = dsName;
+  loaderOuter.style.display = '';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    processZipDataset(e.target.result);
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+JSZipUtils.getBinaryContent(`data/${dsName}.zip`, (err, data) => {
+  if (err) {
+    throw err;
+  }
+  processZipDataset(data);
 });

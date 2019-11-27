@@ -228,6 +228,14 @@ fieldset {
     font-weight: bold;
 }
 
+#dataset-upload-button {
+    display: none;
+    visibility: hidden;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
 #loader-outer {
     position: absolute;
     height: 100%;
