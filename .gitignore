@@ -5,6 +5,7 @@ data/processed/*
 data/processed/lastfm/*
 !data/processed/lastfm/my_list.txt
 web/data/*
+web/discovery-rs.jpg
 node_modules
 models/*
 !models/.gitkeep
