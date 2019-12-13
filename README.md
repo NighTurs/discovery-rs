@@ -1,4 +1,4 @@
-# Discover Recommender System
+# Discovery Recommender System
 
 > My take on recommender systems.
 
