@@ -10,7 +10,7 @@ TSNE = tsne_emb.csv
 RECS = recommendations.pickle
 WEB = web.csv
 INDEX = web_index.json
-REC_ITEMS = my_list.csv
+REC_ITEMS = rec_items.csv
 
 LF_360K_URL = http://mtg.upf.edu/static/datasets/last.fm/lastfm-dataset-360K.tar.gz
 LF_SHORT = lf
