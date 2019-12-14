@@ -1,21 +1,58 @@
+PYTHON = python -m
+NODE = node
+RAW_DIR = data/raw
+PROCESSED_DIR = data/processed
+MODEL_DIR = models
+WEB_DATA_DIR = web/data
+DS = ds.csv
+EMBED_LAYER = de_embedding_layer.weight
+TSNE = tsne_emb.csv
+RECS = recommendations.pickle
+WEB = web.csv
+INDEX = web_index.json
+REC_ITEMS = my_list.csv
+
+LF_360K_URL = http://mtg.upf.edu/static/datasets/last.fm/lastfm-dataset-360K.tar.gz
+LF_SHORT = lf
+LF_RAW_DIR = ${RAW_DIR}/lastfm-dataset-360K
+LF_PROC_DIR = ${PROCESSED_DIR}/${LF_SHORT}
+LF_MODEL = ${MODEL_DIR}/${LF_SHORT}_epoch_30.model
+LF_ZIP = ${LF_SHORT}.zip
+
+ML_LATEST_URL = http://files.grouplens.org/datasets/movielens/ml-latest.zip
+ML_SHORT = ml
+ML_RAW_DIR = ${RAW_DIR}/ml-latest
+ML_PROC_DIR = ${PROCESSED_DIR}/${ML_SHORT}
+ML_MODEL = ${MODEL_DIR}/${ML_SHORT}_epoch_100.model
+ML_ZIP = ${ML_SHORT}.zip
+
+GB_10K_URL = https://github.com/zygmuntz/goodbooks-10k/releases/download/v1.0/goodbooks-10k.zip
+GB_SHORT = gb
+GB_RAW_DIR = ${RAW_DIR}/goodbooks-10k
+GB_PROC_DIR = ${PROCESSED_DIR}/${GB_SHORT}
+GB_MODEL = ${MODEL_DIR}/${GB_SHORT}_epoch_100.model
+GB_ZIP = ${GB_SHORT}.zip
+
 # Lastfm 360k targets
 
-lastfm_raw: data/raw/lastfm-dataset-360K
+lf_raw: ${LF_RAW_DIR}
 
-data/raw/lastfm-dataset-360K:
-	(cd data/raw && wget http://mtg.upf.edu/static/datasets/last.fm/lastfm-dataset-360K.tar.gz && tar xvfz lastfm-dataset-360K.tar.gz)
+${LF_RAW_DIR}:
+	(cd ${RAW_DIR} && wget ${LF_360K_URL} && tar xvfz lastfm-dataset-360K.tar.gz)
 
-lastfm_processed: data/processed/lastfm/ds.csv
+lf_processed: ${LF_PROC_DIR}/${DS}
 
-data/processed/lastfm/ds.csv: data/raw/lastfm-dataset-360K
-	python -m scripts.lastfm.process_raw --input data/raw/lastfm-dataset-360K/usersha1-artmbid-artname-plays.tsv --output_dir data/processed/lastfm
+${LF_PROC_DIR}/${DS}: ${LF_RAW_DIR}
+	${PYTHON} scripts.lastfm.process_raw \
+		--input ${LF_RAW_DIR}/usersha1-artmbid-artname-plays.tsv \
+		--output_dir ${LF_PROC_DIR}
 
-lastfm_train_model: models/lastfm_epoch_30.model
+lf_train_model: ${LF_MODEL}
 
-models/lastfm_epoch_30.model: data/processed/lastfm/ds.csv
-	python -m scripts.train_rs \
-		--input_dir data/processed/lastfm \
-		--model_path models/lastfm \
+${LF_MODEL}: ${LF_PROC_DIR}/${DS}
+	${PYTHON} scripts.train_rs \
+		--input_dir ${LF_PROC_DIR} \
+		--model_path ${MODEL_DIR}/${LF_SHORT} \
 		--lr 1e-3 \
 		--lr_milestones 20 27 \
 		--wd 3e-4 \
@@ -24,64 +61,67 @@ models/lastfm_epoch_30.model: data/processed/lastfm/ds.csv
 		--batch_size 500 \
 		--wo_eval
 
-lastfm_musicbrainz_data: data/processed/lastfm/musicbrainz.pickle
+lf_musicbrainz_data: ${LF_PROC_DIR}/musicbrainz.pickle
 
-data/processed/lastfm/musicbrainz.pickle: data/processed/lastfm/ds.csv
-	python -m scripts.lastfm.get_musicbrainz_data --input_dir data/processed/lastfm
+${LF_PROC_DIR}/musicbrainz.pickle: ${LF_PROC_DIR}/${DS}
+	${PYTHON} scripts.lastfm.get_musicbrainz_data --input_dir ${LF_PROC_DIR}
 
-lastfm_tsne_embedding: data/processed/lastfm/tsne_emb.csv
+lf_tsne_embedding: ${LF_PROC_DIR}/${TSNE}
 
-data/processed/lastfm/tsne_emb.csv: models/lastfm_epoch_30.model
-	python -m scripts.tsne_emb \
-	--model models/lastfm_epoch_30.model \
-	--layer_name de_embedding_layer.weight \
+${LF_PROC_DIR}/${TSNE}: ${LF_MODEL}
+	${PYTHON} scripts.tsne_emb \
+	--model ${LF_MODEL} \
+	--layer_name ${EMBED_LAYER} \
 	--perplexities 50 500 \
 	--lr 1000 \
 	--n_iter 3000 \
-	--output_dir data/processed/lastfm
+	--output_dir ${LF_PROC_DIR}
 
-lastfm_rs_recommend: data/processed/lastfm/recommendations.pickle
+lf_rs_recommend: ${LF_PROC_DIR}/${RECS}
 
-data/processed/lastfm/recommendations.pickle: models/lastfm_epoch_30.model data/processed/lastfm/ds.csv
-	python -m scripts.rs_recommend \
-	--input_dir data/processed/lastfm \
-	--model_path models/lastfm_epoch_30.model \
-	--item_list data/processed/lastfm/my_list.csv
+${LF_PROC_DIR}/${RECS}: ${LF_MODEL}
+	${PYTHON} scripts.rs_recommend \
+	--input_dir ${LF_PROC_DIR} \
+	--model_path ${LF_MODEL} \
+	--item_list ${LF_PROC_DIR}/${REC_ITEMS}
 
-lastfm_web_data: data/processed/lastfm/web.csv
+lf_web_data: ${LF_PROC_DIR}/${WEB}
 
-data/processed/lastfm/web.csv: data/processed/lastfm/ds.csv data/processed/lastfm/tsne_emb.csv data/processed/lastfm/musicbrainz.pickle data/processed/lastfm/recommendations.pickle
-	python -m scripts.lastfm.assemble_web_data --input_dir data/processed/lastfm
+${LF_PROC_DIR}/${WEB}: ${LF_PROC_DIR}/${TSNE} ${LF_PROC_DIR}/musicbrainz.pickle ${LF_PROC_DIR}/${RECS}
+	${PYTHON} scripts.lastfm.assemble_web_data --input_dir ${LF_PROC_DIR}
 
-lastfm_elasticlunr_index: data/processed/lastfm/web_index.json
+lf_search_index: ${LF_PROC_DIR}/${INDEX}
 
-data/processed/lastfm/web_index.json: data/processed/lastfm/web.csv
-	node scripts/indexer.js data/processed/lastfm
+${LF_PROC_DIR}/${INDEX}: ${LF_PROC_DIR}/${WEB}
+	${NODE} scripts/indexer.js ${LF_PROC_DIR}
 
-lastfm_web_archive: web/data/lastfm.zip
+lf_web_archive: ${WEB_DATA_DIR}/${LF_ZIP}
 
-web/data/lastfm.zip: data/processed/lastfm/web.csv data/processed/lastfm/web_index.json
-	(cd -- data/processed/lastfm && zip lastfm.zip web.csv web_index.json) && cp data/processed/lastfm/lastfm.zip web/data/
+${WEB_DATA_DIR}/${LF_ZIP}: ${LF_PROC_DIR}/${WEB} ${LF_PROC_DIR}/${INDEX}
+	(cd -- ${LF_PROC_DIR} && zip ${LF_ZIP} ${WEB} ${INDEX}) && cp ${LF_PROC_DIR}/${LF_ZIP} ${WEB_DATA_DIR}
 
 # Movielens targets
 
-ml_raw: data/raw/ml-latest
+ml_raw: ${ML_RAW_DIR}
 
-data/raw/ml-latest:
-	(cd data/raw && wget http://files.grouplens.org/datasets/movielens/ml-latest.zip && unzip ml-latest.zip)
+${ML_RAW_DIR}:
+	(cd ${RAW_DIR} && wget ${ML_LATEST_URL} && unzip ml-latest.zip)
 
-ml_processed: data/processed/ml/ds.csv
+ml_processed: ${ML_PROC_DIR}/${DS}
 
-data/processed/ml/ds.csv: data/raw/ml-latest
-	python -m scripts.movielens.process_raw --input_dir data/raw/ml-latest --output_dir data/processed/ml \
-		--movie_users_threshold 5 --user_movies_threshold 5
+${ML_PROC_DIR}/${DS}: ${ML_RAW_DIR}
+	${PYTHON} scripts.movielens.process_raw \
+		--input_dir ${ML_RAW_DIR} \
+		--output_dir ${ML_PROC_DIR} \
+		--movie_users_threshold 5 \
+		--user_movies_threshold 5
 
-ml_train_model: models/ml_epoch_100.model
+ml_train_model: ${ML_MODEL}
 
-models/ml_epoch_100.model: data/processed/ml/ds.csv
-	python -m scripts.train_rs \
-		--input_dir data/processed/ml \
-		--model_path models/ml \
+${ML_MODEL}: ${ML_PROC_DIR}/${DS}
+	${PYTHON} scripts.train_rs \
+		--input_dir ${ML_PROC_DIR} \
+		--model_path ${MODEL_DIR}/${ML_SHORT} \
 		--lr 1e-3 \
 		--lr_milestones 60 80 \
 		--wd 2e-5 \
@@ -90,61 +130,64 @@ models/ml_epoch_100.model: data/processed/ml/ds.csv
 		--batch_size 500 \
 		--wo_eval
 
-ml_tsne_embedding: data/processed/ml/tsne_emb.csv
+ml_tsne_embedding: ${ML_PROC_DIR}/${TSNE}
 
-data/processed/ml/tsne_emb.csv: models/ml_epoch_100.model
-	python -m scripts.tsne_emb \
-	--model models/ml_epoch_100.model \
-	--layer_name de_embedding_layer.weight \
+${ML_PROC_DIR}/${TSNE}: ${ML_MODEL}
+	${PYTHON} scripts.tsne_emb \
+	--model ${ML_MODEL} \
+	--layer_name ${EMBED_LAYER} \
 	--perplexities 50 500 \
 	--lr 1000 \
 	--n_iter 1500 \
-	--output_dir data/processed/ml
+	--output_dir ${ML_PROC_DIR}
 
-ml_rs_recommend: data/processed/ml/recommendations.pickle
+ml_rs_recommend: ${ML_PROC_DIR}/${RECS}
 
-data/processed/ml/recommendations.pickle: models/ml_epoch_100.model data/processed/ml/ds.csv
-	python -m scripts.rs_recommend \
-	--input_dir data/processed/ml \
-	--model_path models/ml_epoch_100.model \
-	--item_list data/processed/ml/my_list.csv
+${ML_PROC_DIR}/${RECS}: ${ML_MODEL} ${ML_PROC_DIR}/${DS}
+	${PYTHON} scripts.rs_recommend \
+	--input_dir ${ML_PROC_DIR} \
+	--model_path ${ML_MODEL} \
+	--item_list ${ML_PROC_DIR}/${REC_ITEMS}
 
-ml_web_data: data/processed/ml/web.csv
+ml_web_data: ${ML_PROC_DIR}/web.csv
 
-data/processed/ml/web.csv: data/processed/ml/tsne_emb.csv data/processed/ml/recommendations.pickle
-	python -m scripts.movielens.assemble_web_data \
-	--raw_dir data/raw/ml-latest \
-	--processed_dir data/processed/ml
+${ML_PROC_DIR}/${WEB}: ${ML_PROC_DIR}/${TSNE} ${ML_PROC_DIR}/${RECS}
+	${PYTHON} scripts.movielens.assemble_web_data \
+	--raw_dir ${ML_RAW_DIR} \
+	--processed_dir ${ML_PROC_DIR}
 
-ml_elasticlunr_index: data/processed/ml/web_index.json
+ml_search_index: ${ML_PROC_DIR}/${INDEX}
 
-data/processed/ml/web_index.json: data/processed/ml/web.csv
-	node scripts/indexer.js data/processed/ml
+${ML_PROC_DIR}/${INDEX}: ${ML_PROC_DIR}/${WEB}
+	${NODE} scripts/indexer.js ${ML_PROC_DIR}
 
-ml_web_archive: web/data/ml.zip
+ml_web_archive: ${WEB_DATA_DIR}/${ML_ZIP}
 
-web/data/ml.zip: data/processed/ml/web.csv data/processed/ml/web_index.json
-	(cd -- data/processed/ml && zip ml.zip web.csv web_index.json) && cp data/processed/ml/ml.zip web/data/
+${WEB_DATA_DIR}/${ML_ZIP}: ${ML_PROC_DIR}/${WEB} ${ML_PROC_DIR}/${INDEX}
+	(cd -- ${ML_PROC_DIR} && zip ${ML_ZIP} ${WEB} ${INDEX}) && cp ${ML_PROC_DIR}/${ML_ZIP} ${WEB_DATA_DIR}
 
 # Goodbooks 10k
 
-gbook_raw: data/raw/goodbooks-10k
+gb_raw: ${GB_RAW_DIR}
 
-data/raw/goodbooks-10k:
-	(cd data/raw && wget https://github.com/zygmuntz/goodbooks-10k/releases/download/v1.0/goodbooks-10k.zip && unzip goodbooks-10k.zip -d goodbooks-10k)
+${GB_RAW_DIR}:
+	(cd ${RAW_DIR} && wget ${GB_10K_URL} && unzip goodbooks-10k.zip -d goodbooks-10k)
 
-gbook_processed: data/processed/gbook/ds.csv
+gb_processed: ${GB_PROC_DIR}/${DS}
 
-data/processed/gbook/ds.csv: data/raw/goodbooks-10k
-	python -m scripts.goodbooks.process_raw --input_dir data/raw/goodbooks-10k --output_dir data/processed/gbook \
-		--book_users_threshold 5 --user_books_threshold 5
+${GB_PROC_DIR}/${DS}: ${GB_RAW_DIR}
+	${PYTHON} scripts.goodbooks.process_raw \
+		--input_dir ${GB_RAW_DIR} \
+		--output_dir ${GB_PROC_DIR} \
+		--book_users_threshold 5 \
+		--user_books_threshold 5
 
-gbook_train_model: models/gbook_epoch_100.model
+gb_train_model: ${GB_MODEL}
 
-models/gbook_epoch_100.model: data/processed/gbook/ds.csv
-	python -m scripts.train_rs \
-		--input_dir data/processed/gbook \
-		--model_path models/gbook \
+${GB_MODEL}: ${GB_PROC_DIR}/${DS}
+	${PYTHON} scripts.train_rs \
+		--input_dir ${GB_PROC_DIR} \
+		--model_path ${MODEL_DIR}/${GB_SHORT} \
 		--lr 1e-3 \
 		--lr_milestones 60 80 \
 		--wd 2e-5 \
@@ -153,43 +196,46 @@ models/gbook_epoch_100.model: data/processed/gbook/ds.csv
 		--batch_size 500 \
 		--wo_eval
 
-gbook_tsne_embedding: data/processed/gbook/tsne_emb.csv
+gb_tsne_embedding: ${GB_PROC_DIR}/${TSNE}
 
-data/processed/gbook/tsne_emb.csv: models/gbook_epoch_100.model
-	python -m scripts.tsne_emb \
-	--model models/gbook_epoch_100.model \
-	--layer_name de_embedding_layer.weight \
+${GB_PROC_DIR}/${TSNE}: ${GB_MODEL}
+	${PYTHON} scripts.tsne_emb \
+	--model ${GB_MODEL} \
+	--layer_name ${EMBED_LAYER} \
 	--perplexities 20 200 \
 	--lr 1000 \
 	--n_iter 1500 \
-	--output_dir data/processed/gbook
+	--output_dir ${GB_PROC_DIR}
 
-gbook_rs_recommend: data/processed/gbook/recommendations.pickle
+gb_rs_recommend: ${GB_PROC_DIR}/${RECS}
 
-data/processed/gbook/recommendations.pickle: models/gbook_epoch_100.model data/processed/gbook/ds.csv
-	python -m scripts.rs_recommend \
-	--input_dir data/processed/gbook \
-	--model_path models/gbook_epoch_100.model \
-	--item_list data/processed/gbook/my_list.csv
+${GB_PROC_DIR}/recommendations.pickle: ${GB_MODEL} ${GB_PROC_DIR}/${DS}
+	${PYTHON} scripts.rs_recommend \
+	--input_dir ${GB_PROC_DIR} \
+	--model_path ${GB_MODEL} \
+	--item_list ${GB_PROC_DIR}/${REC_ITEMS}
 
-gbook_web_data: data/processed/gbook/web.csv
+gb_web_data: ${GB_PROC_DIR}/web.csv
 
-data/processed/gbook/web.csv: data/processed/gbook/tsne_emb.csv data/processed/gbook/recommendations.pickle
-	python -m scripts.goodbooks.assemble_web_data --raw_dir data/raw/goodbooks-10k --processed_dir data/processed/gbook
+${GB_PROC_DIR}/${WEB}: ${GB_PROC_DIR}/${TSNE} ${GB_PROC_DIR}/${RECS}
+	${PYTHON} scripts.goodbooks.assemble_web_data \
+		--raw_dir ${GB_RAW_DIR} \
+		--processed_dir ${GB_PROC_DIR}
 
-gbook_elasticlunr_index: data/processed/gbook/web_index.json
+gb_search_index: ${GB_PROC_DIR}/${INDEX}
 
-data/processed/gbook/web_index.json: data/processed/gbook/web.csv
-	node scripts/indexer.js data/processed/gbook
+${GB_PROC_DIR}/${INDEX}: ${GB_PROC_DIR}/${WEB}
+	${NODE} scripts/indexer.js ${GB_PROC_DIR}
 
-gbook_web_archive: web/data/gbook.zip
+gb_web_archive: ${WEB_DATA_DIR}/${GB_ZIP}
 
-web/data/gbook.zip: data/processed/gbook/web.csv data/processed/gbook/web_index.json
-	(cd -- data/processed/gbook && zip gbook.zip web.csv web_index.json) && cp data/processed/gbook/gbook.zip web/data/
+${WEB_DATA_DIR}/${GB_ZIP}: ${GB_PROC_DIR}/${WEB} ${GB_PROC_DIR}/${INDEX}
+	(cd -- ${GB_PROC_DIR} && zip ${GB_ZIP} ${WEB} ${INDEX}) && cp ${GB_PROC_DIR}/${GB_ZIP} ${WEB_DATA_DIR}
 
 # Recommender server
 
 start_rec_server:
-	python -m scripts.rec_server \
-	--port 5501 --ds ml gbook lastfm \
-	--models models/ml_epoch_100.model models/gbook_epoch_100.model models/lastfm_epoch_30.model
+	${PYTHON} scripts.rec_server \
+	--port 5501 \
+	--ds ${ML_SHORT} ${GB_SHORT} ${LF_SHORT} \
+	--models ${ML_MODEL} ${GB_MODEL} ${LF_MODEL}
