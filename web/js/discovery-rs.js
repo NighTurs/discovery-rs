@@ -742,6 +742,11 @@ function proceedWithDataset(items, index) {
     tooltip.style.display = 'none';
   }
 
+  function removeHighlightWithTooltip() {
+    hideTooltip();
+    removeHighlight();
+  }
+
   function updateHighlightWithTooltip() {
     const [mouseX, mouseY] = d3.mouse(view.node());
     const mousePosition = [mouseX, mouseY];
@@ -750,13 +755,8 @@ function proceedWithDataset(items, index) {
       highlightItem(itemIdx, fromFilter);
       showTooltip(mousePosition, items[itemIdx]);
     } else {
-      removeHighlight();
+      removeHighlightWithTooltip();
     }
-  }
-
-  function removeHighlightWithTooltip() {
-    hideTooltip();
-    removeHighlight();
   }
 
   // Need to capture it on whole window.
