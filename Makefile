@@ -61,10 +61,13 @@ ${LF_MODEL}: ${LF_PROC_DIR}/${DS}
 		--batch_size 500 \
 		--wo_eval
 
-lf_musicbrainz_data: ${LF_PROC_DIR}/musicbrainz.pickle
+lf_musicbrainz_data: ${LF_PROC_DIR}/musicbrainz.csv
 
-${LF_PROC_DIR}/musicbrainz.pickle: ${LF_PROC_DIR}/${DS}
-	${PYTHON} scripts.lastfm.get_musicbrainz_data --input_dir ${LF_PROC_DIR}
+${LF_PROC_DIR}/musicbrainz.csv: ${LF_RAW_DIR}
+	${PYTHON} scripts.lastfm.get_musicbrainz_data \
+		--input ${LF_RAW_DIR}/usersha1-artmbid-artname-plays.tsv \
+		--output_dir ${LF_PROC_DIR} \
+		--ntags 6
 
 lf_tsne_embedding: ${LF_PROC_DIR}/${TSNE}
 
@@ -87,7 +90,7 @@ ${LF_PROC_DIR}/${RECS}: ${LF_MODEL}
 
 lf_web_data: ${LF_PROC_DIR}/${WEB}
 
-${LF_PROC_DIR}/${WEB}: ${LF_PROC_DIR}/${TSNE} ${LF_PROC_DIR}/musicbrainz.pickle ${LF_PROC_DIR}/${RECS}
+${LF_PROC_DIR}/${WEB}: ${LF_PROC_DIR}/${TSNE} ${LF_PROC_DIR}/musicbrainz.csv ${LF_PROC_DIR}/${RECS}
 	${PYTHON} scripts.lastfm.assemble_web_data --input_dir ${LF_PROC_DIR}
 
 lf_search_index: ${LF_PROC_DIR}/${INDEX}

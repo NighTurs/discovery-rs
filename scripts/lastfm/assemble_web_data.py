@@ -12,8 +12,10 @@ def assemble_web_data(input_dir):
     tsne_emb = rescale_tsne(tsne_emb)
     with open(path.join(input_dir, 'recommendations.pickle'), 'rb') as handle:
         recommendations = pickle.load(handle)
-    with open(path.join(input_dir, 'musicbrainz.pickle'), 'rb') as handle:
-        musicbrainz = pickle.load(handle)
+    musicbrainz = pd.read_csv(path.join(input_dir, 'musicbrainz.csv'), dtype={
+                              'founded': str, 'dissolved': str}, index_col='mbid')
+    musicbrainz = pd.DataFrame({'mbid': [k[1] for k in a2i.keys()]}).merge(
+        musicbrainz, on='mbid', how='left')
     ds = pd.read_csv(path.join(input_dir, 'ds.csv'))
     listeners = ds.groupby('item')['user'].count()
     listeners_pct = percentile(listeners)
@@ -24,10 +26,10 @@ def assemble_web_data(input_dir):
                         'x': tsne_emb['x'],
                         'y': tsne_emb['y'],
                         't_name': [i2a[i][0] for i in range(nartists)],
-                        't_tags': [', '.join(musicbrainz[i]['tags']) for i in range(nartists)],
-                        't_country': [musicbrainz[i]['country'] for i in range(nartists)],
-                        'founded': [musicbrainz[i]['founded'] for i in range(nartists)],
-                        'dissolved': [musicbrainz[i]['dissolved'] for i in range(nartists)],
+                        't_tags': musicbrainz['tags'],
+                        't_country': musicbrainz['country'],
+                        'founded': musicbrainz['founded'],
+                        'dissolved': musicbrainz['dissolved'],
                         'recommend_value': recommendations,
                         'n_pct_recommend': percentile(pd.Series(recommendations)),
                         'listeners': listeners,
