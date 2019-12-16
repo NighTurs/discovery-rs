@@ -33,6 +33,12 @@ GB_PROC_DIR = ${PROCESSED_DIR}/${GB_SHORT}
 GB_MODEL = ${MODEL_DIR}/${GB_SHORT}_epoch_100.model
 GB_ZIP = ${GB_SHORT}.zip
 
+MSD_SHORT = msd
+MSD_RAW_DIR = ${RAW_DIR}/msd-taste-profile
+MSD_PROC_DIR = ${PROCESSED_DIR}/${MSD_SHORT}
+MSD_MODEL = ${MODEL_DIR}/${MSD_SHORT}_epoch_100.model
+MSD_ZIP = ${MSD_SHORT}.zip
+
 # Lastfm 360k targets
 
 lf_raw: ${LF_RAW_DIR}
@@ -234,6 +240,76 @@ gb_web_archive: ${WEB_DATA_DIR}/${GB_ZIP}
 
 ${WEB_DATA_DIR}/${GB_ZIP}: ${GB_PROC_DIR}/${WEB} ${GB_PROC_DIR}/${INDEX}
 	(cd -- ${GB_PROC_DIR} && zip ${GB_ZIP} ${WEB} ${INDEX}) && cp ${GB_PROC_DIR}/${GB_ZIP} ${WEB_DATA_DIR}
+
+# MSD Taste Profile
+
+msd_raw: ${MSD_RAW_DIR}
+
+${MSD_RAW_DIR}:
+	mkdir ${MSD_RAW_DIR} && \
+	(cd ${MSD_RAW_DIR} && \
+	wget http://millionsongdataset.com/sites/default/files/AdditionalFiles/unique_tracks.txt && \
+	wget http://millionsongdataset.com/sites/default/files/challenge/train_triplets.txt.zip && \
+	wget http://millionsongdataset.com/sites/default/files/tasteprofile/sid_mismatches.txt && \
+    unzip train_triplets.txt.zip)
+
+msd_processed: ${MSD_PROC_DIR}/${DS}
+
+${MSD_PROC_DIR}/${DS}: ${MSD_RAW_DIR}
+	${PYTHON} scripts.msd.process_raw \
+		--input_dir ${MSD_RAW_DIR} \
+		--output_dir ${MSD_PROC_DIR} \
+		--song_users_threshold 40 \
+		--user_songs_threshold 20
+
+msd_train_model: ${MSD_MODEL}
+
+${MSD_MODEL}: ${MSD_PROC_DIR}/${DS}
+	${PYTHON} scripts.train_rs \
+		--input_dir ${MSD_PROC_DIR} \
+		--model_path ${MODEL_DIR}/${MSD_SHORT} \
+		--lr 1e-3 \
+		--lr_milestones 60 80 \
+		--wd 2e-5 \
+		--epochs 100 \
+		--emb_size 500 \
+		--batch_size 500
+		# --wo_eval
+
+msd_tsne_embedding: ${MSD_PROC_DIR}/${TSNE}
+
+${MSD_PROC_DIR}/${TSNE}: ${MSD_MODEL}
+	${PYTHON} scripts.tsne_emb \
+	--model ${MSD_MODEL} \
+	--layer_name ${EMBED_LAYER} \
+	--perplexities 50 500 \
+	--lr 1000 \
+	--n_iter 3000 \
+	--output_dir ${MSD_PROC_DIR}
+
+msd_rs_recommend: ${MSD_PROC_DIR}/${RECS}
+
+${MSD_PROC_DIR}/recommendations.pickle: ${MSD_MODEL} ${MSD_PROC_DIR}/${DS}
+	${PYTHON} scripts.rs_recommend \
+	--input_dir ${MSD_PROC_DIR} \
+	--model_path ${MSD_MODEL} \
+	--item_list ${MSD_PROC_DIR}/${REC_ITEMS}
+
+msd_web_data: ${MSD_PROC_DIR}/web.csv
+
+${MSD_PROC_DIR}/${WEB}: ${MSD_PROC_DIR}/${TSNE} ${MSD_PROC_DIR}/${RECS}
+	${PYTHON} scripts.msd.assemble_web_data \
+		--processed_dir ${MSD_PROC_DIR}
+
+msd_search_index: ${MSD_PROC_DIR}/${INDEX}
+
+${MSD_PROC_DIR}/${INDEX}: ${MSD_PROC_DIR}/${WEB}
+	${NODE} scripts/indexer.js ${MSD_PROC_DIR}
+
+msd_web_archive: ${WEB_DATA_DIR}/${MSD_ZIP}
+
+${WEB_DATA_DIR}/${MSD_ZIP}: ${MSD_PROC_DIR}/${WEB} ${MSD_PROC_DIR}/${INDEX}
+	(cd -- ${MSD_PROC_DIR} && zip ${MSD_ZIP} ${WEB} ${INDEX}) && cp ${MSD_PROC_DIR}/${MSD_ZIP} ${WEB_DATA_DIR}
 
 # Recommender server
 
