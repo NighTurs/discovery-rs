@@ -10,6 +10,9 @@ data/processed/gb/*
 !data/processed/ml
 data/processed/ml/*
 !data/processed/ml/rec_items.csv
+!data/processed/msd
+data/processed/msd/*
+!data/processed/msd/rec_items.csv
 web/data/*
 !web/data/.gitkeep
 web/discovery-rs.jpg
