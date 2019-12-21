@@ -18,9 +18,15 @@ def assemble_web_data(processed_dir):
     web = pd.DataFrame({'idx': [*range(nsongs)],
                         'x': tsne_emb['x'],
                         'y': tsne_emb['y'],
-                        't_name': info['artist'].str.cat(info['song'], sep=' - '),
+                        't_name': info['artist'].str.cat(info['title'], sep=' - '),
+                        't_release': info['release'],
+                        'tags': info['tags'],
+                        'year': info['year'],
+                        'duration': info['duration'],
                         'recommend_value': recommendations,
-                        'n_recommend_pct': percentile(pd.Series(recommendations))})
+                        'n_recommend_pct': percentile(pd.Series(recommendations)),
+                        'n_artist_familiarity': info['artist_familiarity'],
+                        'n_artist_hotness': info['artist_hotness']})
     web.to_csv(path.join(processed_dir, 'web.csv'),
                index=False, float_format='%.5f')
 

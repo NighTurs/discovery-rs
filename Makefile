@@ -251,6 +251,8 @@ ${MSD_RAW_DIR}:
 	wget http://millionsongdataset.com/sites/default/files/AdditionalFiles/unique_tracks.txt && \
 	wget http://millionsongdataset.com/sites/default/files/challenge/train_triplets.txt.zip && \
 	wget http://millionsongdataset.com/sites/default/files/tasteprofile/sid_mismatches.txt && \
+	wget http://millionsongdataset.com/sites/default/files/AdditionalFiles/track_metadata.db && \
+	wget http://www.ee.columbia.edu/~thierry/artist_term.db && \
     unzip train_triplets.txt.zip)
 
 msd_processed: ${MSD_PROC_DIR}/${DS}
@@ -282,7 +284,7 @@ ${MSD_PROC_DIR}/${TSNE}: ${MSD_MODEL}
 	${PYTHON} scripts.tsne_emb \
 	--model ${MSD_MODEL} \
 	--layer_name ${EMBED_LAYER} \
-	--perplexities 50 500 \
+	--perplexities 30 300 \
 	--lr 1000 \
 	--n_iter 3000 \
 	--output_dir ${MSD_PROC_DIR}
@@ -316,5 +318,5 @@ ${WEB_DATA_DIR}/${MSD_ZIP}: ${MSD_PROC_DIR}/${WEB} ${MSD_PROC_DIR}/${INDEX}
 start_rec_server:
 	${PYTHON} scripts.rec_server \
 	--port 5501 \
-	--ds ${ML_SHORT} ${GB_SHORT} ${LF_SHORT} \
-	--models ${ML_MODEL} ${GB_MODEL} ${LF_MODEL}
+	--ds ${ML_SHORT} ${GB_SHORT} ${LF_SHORT} ${MSD_SHORT} \
+	--models ${ML_MODEL} ${GB_MODEL} ${LF_MODEL} ${MSD_MODEL}
