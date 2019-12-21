@@ -17,5 +17,6 @@ node_modules
 models/*
 !models/.gitkeep
 
+.ipynb_checkpoints
 *.pyc
 *.pyo
