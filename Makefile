@@ -275,10 +275,10 @@ ${WEB_DATA_DIR}/${GB_ZIP}: ${GB_PROC_DIR}/${WEB} ${GB_PROC_DIR}/${INDEX}
 
 # MSD Taste Profile
 
-msd_raw: ${MSD_RAW_DIR}
+msd_raw: ${MSD_RAW_DIR}/.msd_raw.sentinel
 .PHONY: msd_raw
 
-${MSD_RAW_DIR}:
+${MSD_RAW_DIR}/.msd_raw.sentinel:
 	mkdir ${MSD_RAW_DIR} && \
 	(cd ${MSD_RAW_DIR} && \
 	wget http://millionsongdataset.com/sites/default/files/AdditionalFiles/unique_tracks.txt && \
