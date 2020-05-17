@@ -1,14 +1,16 @@
 import torch
 import argparse
 import pandas as pd
-import numpy as np
 from os import path
-from openTSNE import TSNE, TSNEEmbedding, affinity, initialization
+from openTSNE import TSNEEmbedding, affinity
 from openTSNE import initialization
 from openTSNE.callbacks import ErrorLogger
+from typing import List
+
+from scripts.config import params
 
 
-def tsne_emb(model_path, output_dir, layer_name, perplexities, lr, n_iter):
+def tsne_emb(model_path: str, proc_dir: str, layer_name: str, perplexities: List[int], lr: int, n_iter: int):
     model = torch.load(model_path, map_location=torch.device('cpu'))['model']
     w = model[layer_name].numpy()
 
@@ -26,25 +28,28 @@ def tsne_emb(model_path, output_dir, layer_name, perplexities, lr, n_iter):
         affinities_multiscale_mixture,
         negative_gradient_method="fft",
         n_jobs=-1,
+        random_state=4,
         callbacks=ErrorLogger())
 
     embedding = embedding.optimize(
         n_iter=n_iter, exaggeration=None, momentum=0.8, learning_rate=lr)
     df = pd.DataFrame(embedding, columns=['x', 'y'])
-    df.to_csv(path.join(output_dir, 'tsne_emb.csv'), index=False)
+    df.to_csv(path.join(proc_dir, 'tsne_emb.csv'), index=False)
+
+    with open(path.join(proc_dir, 'kl_divergence'), 'w') as f:
+        f.write(f'{embedding.kl_divergence:.4f}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', required=True,
-                        help='Saved RS model')
-    parser.add_argument('--layer_name', required=True,
-                        help='Embedding layer name')
-    parser.add_argument('--perplexities', required=True,
-                        type=int, nargs='+', help='Perplexities')
-    parser.add_argument('--lr', required=True, type=int, help='Learning rate')
-    parser.add_argument('--n_iter', required=True,
-                        type=int, help='Number of iterations')
-    parser.add_argument('--output_dir', required=True, help='Output directory')
+    parser.add_argument('--domain', required=True,
+                        help='Short name of data domain, e.g. lf for last.fm')
     args = parser.parse_args()
-    tsne_emb(args.model, args.output_dir, args.layer_name, args.perplexities, args.lr, args.n_iter)
+    p = params[args.domain]
+    pt = p['tsne_emb']
+    tsne_emb(model_path=path.join(params['models_dir'], args.domain + '.model'),
+             proc_dir=p['common']['proc_dir'],
+             layer_name=pt['layer_name'],
+             perplexities=[int(x) for x in pt['perplexities']],
+             lr=pt['lr'],
+             n_iter=pt['n_iter'])

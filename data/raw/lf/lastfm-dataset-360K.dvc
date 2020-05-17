@@ -1,0 +1,11 @@
+md5: 964b1ae6a7bb831bc475c24d480a3b74
+cmd: tar xvzf lastfm-dataset-360K.tar.gz
+deps:
+- md5: 635e6ed3fc873aa4ba33aba0ebce02b1
+  path: lastfm-dataset-360K.tar.gz
+outs:
+- md5: 6a0c85cdf0988870cfb49f7b15120b4d.dir
+  path: lastfm-dataset-360K
+  cache: true
+  metric: false
+  persist: false

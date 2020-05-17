@@ -1,0 +1,11 @@
+md5: f7fde540b6955db33382046aec38b3f6
+cmd: unzip ml-latest.zip
+deps:
+- md5: 90ed04363d9554206faa113da1175238
+  path: ml-latest.zip
+outs:
+- md5: 6ffe813977fb6a0f763b048736291d1d.dir
+  path: ml-latest
+  cache: true
+  metric: false
+  persist: false

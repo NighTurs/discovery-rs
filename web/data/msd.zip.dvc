@@ -1,0 +1,15 @@
+md5: 2131aa09596303cdaada035997f2cd2f
+cmd: (cd -- data/processed/msd && zip msd.zip web.csv web_index.json) && mv data/processed/msd/msd.zip
+  web/data
+wdir: ../..
+deps:
+- md5: bae73711ad54052ccac143d22577f2df
+  path: data/processed/msd/web.csv
+- md5: 5ff1e04a99ea8b3825abae20c9692e44
+  path: data/processed/msd/web_index.json
+outs:
+- md5: 6bbcd76422d8ad03a0c175d77cbf8ad2
+  path: web/data/msd.zip
+  cache: true
+  metric: false
+  persist: false

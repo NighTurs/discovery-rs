@@ -1,0 +1,19 @@
+-f https://download.pytorch.org/whl/torch_stable.html
+annoy==1.16.3
+click==7.1.2
+Flask==1.1.2
+Flask-Cors==3.0.8
+glog==0.3.1
+itsdangerous==1.1.0
+Jinja2==2.11.2
+MarkupSafe==1.1.1
+numpy==1.18.5
+Pillow==7.1.2
+python-gflags==3.1.2
+recsys-recoder==0.3.0
+scipy==1.4.1
+six==1.15.0
+torch==1.4.0+cpu
+torchvision==0.5.0+cpu
+tqdm==4.46.1
+Werkzeug==1.0.1

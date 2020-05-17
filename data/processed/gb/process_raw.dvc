@@ -1,0 +1,34 @@
+md5: afab00235f91ac13b51962bfb0b88e85
+cmd: python -m scripts.goodbooks.process_raw
+wdir: ../../..
+deps:
+- md5: 5cde1c74053dfc3ea7c657f099dbdec6
+  path: scripts/goodbooks/process_raw.py
+- md5: ddf3322497523480163e63c8a2799049
+  path: scripts/process_raw.py
+- md5: 3000836fc622c9c6d3ba021ce5a28835
+  path: data/raw/goodbooks-10k/ratings.csv
+- path: params.yaml
+  params:
+    gb.common:
+      raw_dir: data/raw/goodbooks-10k
+      proc_dir: data/processed/gb
+    gb.process_raw:
+      book_users_threshold: 5
+      user_books_threshold: 5
+outs:
+- md5: f63289cc0a4fe5f33e2d2bb256d0118a
+  path: data/processed/gb/ds.csv
+  cache: true
+  metric: false
+  persist: false
+- md5: d9baac8948c19016e17096b661e9c9a7
+  path: data/processed/gb/u2i.pickle
+  cache: true
+  metric: false
+  persist: false
+- md5: 293e175f92e1e835c481400f26f8d8f5
+  path: data/processed/gb/x2i.pickle
+  cache: true
+  metric: false
+  persist: false

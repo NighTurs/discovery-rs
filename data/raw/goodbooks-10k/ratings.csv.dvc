@@ -1,0 +1,14 @@
+md5: 04d974bd60d9580d5540cac4664abcad
+locked: true
+deps:
+- path: ratings.csv
+  repo:
+    url: https://github.com/zygmuntz/goodbooks-10k
+    rev: v1.0
+    rev_lock: 150df1674d54605c810128ce9eecbdb356610efe
+outs:
+- md5: 3000836fc622c9c6d3ba021ce5a28835
+  path: ratings.csv
+  cache: true
+  metric: false
+  persist: false

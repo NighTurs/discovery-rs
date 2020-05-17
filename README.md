@@ -31,7 +31,7 @@ First component can be changed to something that provides csv with following req
 4. Any number of "t_" prefixed string columns to be used in search.
 5. Any number of "n_" prefixed float [0, 1] columns to be used for colors and filtering.
 
-And recommender server with api as in [rec_server.py](scripts/rec_server.py). Without server, web application can be used as visualization tool.
+And recommender server with api as in [rec_server.py](rec-server/rec_server.py). Without server, web application can be used as visualization tool.
 
 Currently first component is a variational autoencoder implicit collaborative filtering model trained with [Recoder](https://github.com/amoussawi/recoder). T-SNE is run on latent factors to get two dimmentional coordinates. Based on dataset, additional information is attached to each item.
 
@@ -39,39 +39,30 @@ Web application is a static page that uses WebGL (three.js) for smooth visualiza
 
 ## Getting recommendations
 
-Recommender server has to be run locally. First install python requirements (working on python 3.7):
-
-```bash
-pip install -r requirements.txt
-```
-
 Donwload models from [here](https://drive.google.com/open?id=1bh6uWk7h2anGRXcHYVswpJXv_CnbyJWV) and place them in "models" directory. Then run:
 
 ```bash
-make start_rec_server
+cd rec-server
+docker-compose up
 ```
 
-Now use "Flag" section to get recommendations. Fill in "Name" input and double click items that recommendations will be based on. Then press "Send Flag" to get recommendations. Flags are saved in browser local storage, so will be preserved.
+Now use "Flag" section to get recommendations. Fill in "Name" input and double click items that recommendations will be based on. Then press "Send Flag" to get recommendations. Flags are saved in browser local storage, so they will be preserved.
 
 Alternatively static recommendations can be obtained by modifying [rec_items.csv](data/processed/lf/rec_items.csv) and [reproducing demo](#reproducing-demo).
 
 ## Reproducing demo
 
-Install requirements:
+Build docker container:
 
 ```bash
-pip install -r requirements.txt
-npm install
+docker build -t discovery-rs .
 ```
 
 Then run:
 
 ```bash
-make lf_web_archive ml_web_archive gb_web_archive msd_web_archive
-```
+./docker_shell.sh
 
-**Note** that Last.fm dataset processing uses local MusicBrainz database. To avoid setting it up, musicbrainz.csv can be downloaded from [here](https://drive.google.com/open?id=1bh6uWk7h2anGRXcHYVswpJXv_CnbyJWV). Then to avoid remaking it:
-
-```bash
-make -t data/processed/lf/musicbrainz.csv
+cd web/data
+dvc repro lf.zip.dvc gb.zip.dvc lf.zip.dvc msd.zip.dvc
 ```

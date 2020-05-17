@@ -1,0 +1,20 @@
+md5: 33843c46ef80ae4e6946eacf88caadbe
+cmd: python -m scripts.rs_recommend --domain gb
+wdir: ../../..
+deps:
+- md5: 9b4ddf6507f44c858486c5edc445091a
+  path: models/gb.model
+- md5: 829d10a37ec487fac39909018c08a6ca
+  path: scripts/rs_recommend.py
+- path: params.yaml
+  params:
+    models_dir: models
+    gb.common:
+      raw_dir: data/raw/goodbooks-10k
+      proc_dir: data/processed/gb
+outs:
+- md5: d1a993d42368d4c957ee83a4b8431414
+  path: data/processed/gb/recommendations.pickle
+  cache: true
+  metric: false
+  persist: false

@@ -1,0 +1,11 @@
+md5: 12d05e5d9e04455771cc9fcb0e14dfd5
+locked: true
+deps:
+- etag: '"10846a59-598cfd8426696"'
+  path: http://files.grouplens.org/datasets/movielens/ml-latest.zip
+outs:
+- md5: 90ed04363d9554206faa113da1175238
+  path: ml-latest.zip
+  cache: true
+  metric: false
+  persist: false

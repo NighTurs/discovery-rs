@@ -1,0 +1,32 @@
+md5: 5e928d779c34d9d5e0cf890532332a7a
+cmd: python -m scripts.tsne_emb --domain gb
+wdir: ../../..
+deps:
+- md5: 9b4ddf6507f44c858486c5edc445091a
+  path: models/gb.model
+- md5: 57df353f53c8cc2f0acce70001b95e81
+  path: scripts/tsne_emb.py
+- path: params.yaml
+  params:
+    models_dir: models
+    gb.common:
+      raw_dir: data/raw/goodbooks-10k
+      proc_dir: data/processed/gb
+    gb.tsne_emb:
+      layer_name: de_embedding_layer.weight
+      perplexities:
+      - 20
+      - 200
+      lr: 1000
+      n_iter: 1500
+outs:
+- md5: 982da3437c405216dd263a1308138fb0
+  path: data/processed/gb/kl_divergence
+  cache: false
+  metric: true
+  persist: false
+- md5: c4ca13cbe63fa8b7b49732f1c77f2d19
+  path: data/processed/gb/tsne_emb.csv
+  cache: true
+  metric: false
+  persist: false

@@ -1,9 +1,9 @@
-import argparse
 import pickle
 import pandas as pd
 import os
 from os import path
-from ..utils import keep_positive_ratings, count_filter
+from scripts.process_raw import keep_positive_ratings, count_filter
+from scripts.config import params
 
 
 def process_raw(input_dir, output_dir, movie_users_threshold, user_movies_threshold):
@@ -37,15 +37,9 @@ def process_raw(input_dir, output_dir, movie_users_threshold, user_movies_thresh
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=True,
-                        help='Path to movielens dataset directory')
-    parser.add_argument('--output_dir', required=True,
-                        help='Directory to put processed files into')
-    parser.add_argument('--movie_users_threshold', type=int, required=False, default=5,
-                        help='Users per movie threshold to filter')
-    parser.add_argument('--user_movies_threshold', type=int, required=False, default=5,
-                        help='Movies per user threshold to filter')
-    args = parser.parse_args()
-    process_raw(args.input_dir, args.output_dir,
-                args.movie_users_threshold, args.user_movies_threshold)
+    common_params = params['ml']['common']
+    proc_params = params['ml']['process_raw']
+    process_raw(common_params['raw_dir'],
+                common_params['proc_dir'],
+                int(proc_params['movie_users_threshold']),
+                int(proc_params['user_movies_threshold']))

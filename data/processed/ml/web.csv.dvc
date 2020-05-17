@@ -1,0 +1,29 @@
+md5: 5434c24c54f9a1c6fea7da2bded7263c
+cmd: python -m scripts.movielens.assemble_web_data
+wdir: ../../..
+deps:
+- md5: f831d3a9ccf599a6b9c3d8ad7c801052
+  path: data/processed/ml/ds.csv
+- md5: 51e8648042369fa68771d5c9db3b5236
+  path: data/processed/ml/x2i.pickle
+- md5: a09e9e2f069ed19ea42a01ec3dcb8295
+  path: data/processed/ml/recommendations.pickle
+- md5: 562413b4c7245257f383ed9b2da5ac80
+  path: data/processed/ml/tsne_emb.csv
+- md5: 6ffe813977fb6a0f763b048736291d1d.dir
+  path: data/raw/ml/ml-latest
+- md5: 2fb7a6483d575a5af7ccee045c069456
+  path: scripts/movielens/assemble_web_data.py
+- md5: 4c60e751c769066ec857a54eff0a69ff
+  path: scripts/assemble_web_data.py
+- path: params.yaml
+  params:
+    ml.common:
+      raw_dir: data/raw/ml/ml-latest
+      proc_dir: data/processed/ml
+outs:
+- md5: cc0b90f578e8a7f0c7146598098eb7da
+  path: data/processed/ml/web.csv
+  cache: true
+  metric: false
+  persist: false

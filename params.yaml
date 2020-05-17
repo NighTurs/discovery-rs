@@ -1,0 +1,106 @@
+models_dir: models
+
+gb:
+  common:
+    raw_dir: data/raw/goodbooks-10k
+    proc_dir: data/processed/gb
+  process_raw:
+    book_users_threshold: 5
+    user_books_threshold: 5
+  train_rs:
+    lr: 1e-3
+    lr_milestones:
+      - 60
+      - 80
+    wd: 2e-5
+    epochs: 100
+    emb_size: 200
+    batch_size: 500
+    valid_users_pct: 0.1
+    valid_items_pct: 0.2
+  tsne_emb:
+    layer_name: de_embedding_layer.weight
+    perplexities:
+      - 20
+      - 200
+    lr: 1000
+    n_iter: 1500
+
+lf:
+  common:
+    raw_dir: data/raw/lf/lastfm-dataset-360K
+    proc_dir: data/processed/lf
+  process_raw:
+    playcount_threshold: 40
+    artist_users_threshold: 20
+    user_artists_threshold: 20
+  train_rs:
+    lr: 1e-3
+    lr_milestones:
+      - 20
+      - 27
+    wd: 3e-4
+    epochs: 30
+    emb_size: 200
+    batch_size: 500
+    valid_users_pct: 0.1
+    valid_items_pct: 0.2
+  tsne_emb:
+    layer_name: de_embedding_layer.weight
+    perplexities:
+      - 50
+      - 500
+    lr: 1000
+    n_iter: 3000
+
+ml:
+  common:
+    raw_dir: data/raw/ml/ml-latest
+    proc_dir: data/processed/ml
+  process_raw:
+    movie_users_threshold: 5
+    user_movies_threshold: 5
+  train_rs:
+    lr: 1e-3
+    lr_milestones:
+      - 60
+      - 80
+    wd: 2e-5
+    epochs: 100
+    emb_size: 200
+    batch_size: 500
+    valid_users_pct: 0.1
+    valid_items_pct: 0.2
+  tsne_emb:
+    layer_name: de_embedding_layer.weight
+    perplexities:
+      - 50
+      - 500
+    lr: 1000
+    n_iter: 1500
+
+msd:
+  common:
+    raw_dir: data/raw/msd
+    proc_dir: data/processed/msd
+  process_raw:
+    song_users_threshold: 40
+    user_songs_threshold: 20
+  train_rs:
+    lr: 1e-3
+    lr_milestones:
+      - 60
+      - 80
+    wd: 2e-5
+    epochs: 100
+    emb_size: 500
+    batch_size: 500
+    valid_users_pct: 0.1
+    valid_items_pct: 0.2
+  tsne_emb:
+    layer_name: de_embedding_layer.weight
+    perplexities:
+      - 30
+      - 300
+    lr: 1000
+    n_iter: 3000

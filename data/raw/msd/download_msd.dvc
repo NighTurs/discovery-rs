@@ -1,0 +1,31 @@
+md5: 756c9ca90f06589f32a81505c0a13f55
+cmd: ./download_msd.sh
+deps:
+- md5: 2baab7c1d0eacfd6ceeaabe65f175df7
+  path: download_msd.sh
+outs:
+- md5: a02eb8275b10286d678309a19e229bd0
+  path: unique_tracks.txt
+  cache: true
+  metric: false
+  persist: false
+- md5: fadbc813c11881b3147af3c26006335f
+  path: train_triplets.txt.zip
+  cache: true
+  metric: false
+  persist: false
+- md5: 2c082a9cae76012e471649dc9c804913
+  path: sid_mismatches.txt
+  cache: true
+  metric: false
+  persist: false
+- md5: 89705ce338a360ddcf7e527cd91f8328
+  path: track_metadata.db
+  cache: true
+  metric: false
+  persist: false
+- md5: 7c1cceb7b8420691077f10b8a05dec32
+  path: artist_term.db
+  cache: true
+  metric: false
+  persist: false

@@ -1,24 +1,8 @@
-data/raw/*
-!data/raw/.gitkeep
-data/processed/*
-!data/processed/lf
-data/processed/lf/*
-!data/processed/lf/rec_items.csv
-!data/processed/gb
-data/processed/gb/*
-!data/processed/gb/rec_items.csv
-!data/processed/ml
-data/processed/ml/*
-!data/processed/ml/rec_items.csv
-!data/processed/msd
-data/processed/msd/*
-!data/processed/msd/rec_items.csv
-web/data/*
-!web/data/.gitkeep
 web/discovery-rs.jpg
 node_modules
-models/*
-!models/.gitkeep
+
+.dvc/remote
+notebook/*
 
 .idea
 .ipynb_checkpoints

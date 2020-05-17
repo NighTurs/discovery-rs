@@ -1,0 +1,14 @@
+md5: ccf09e47b6dbd87c112658caec77a785
+cmd: node scripts/indexer.js data/processed/gb
+wdir: ../../..
+deps:
+- md5: ccf5606ffa3efd58f0fd850a970e98e0
+  path: data/processed/gb/web.csv
+- md5: 4d4359c4f2f7f04103c9d41759d49bb5
+  path: scripts/indexer.js
+outs:
+- md5: f7b15ac00c9d1e966a937d2a1d50edac
+  path: data/processed/gb/web_index.json
+  cache: true
+  metric: false
+  persist: false

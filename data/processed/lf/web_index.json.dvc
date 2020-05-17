@@ -1,0 +1,12 @@
+md5: f1a1dfdad811a67377779e93dee4549e
+cmd: node scripts/indexer.js data/processed/lf
+wdir: ../../..
+deps:
+- md5: 4d4359c4f2f7f04103c9d41759d49bb5
+  path: scripts/indexer.js
+outs:
+- md5: ac236cc255182a6172352cd78e15051d
+  path: data/processed/lf/web_index.json
+  cache: true
+  metric: false
+  persist: false

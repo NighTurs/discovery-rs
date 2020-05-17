@@ -2,7 +2,8 @@ import argparse
 import pickle
 import pandas as pd
 from os import path
-from ..utils import percentile, rescale_tsne
+from scripts.assemble_web_data import percentile, rescale_tsne
+from scripts.config import params
 
 
 def assemble_web_data(processed_dir):
@@ -32,8 +33,4 @@ def assemble_web_data(processed_dir):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--processed_dir', required=True,
-                        help='Directory with processed MSD dataset')
-    args = parser.parse_args()
-    assemble_web_data(args.processed_dir)
+    assemble_web_data(params['msd']['common']['proc_dir'])

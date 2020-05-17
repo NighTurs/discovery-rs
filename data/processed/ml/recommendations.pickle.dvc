@@ -1,0 +1,19 @@
+md5: 74f49cc7e1c1e1d20ec719fe916b8dcf
+cmd: python -m scripts.rs_recommend --domain ml
+wdir: ../../..
+deps:
+- md5: 058704464bbd8177a18bba27b7bfd720
+  path: models/ml.model
+- md5: 829d10a37ec487fac39909018c08a6ca
+  path: scripts/rs_recommend.py
+- path: params.yaml
+  params:
+    ml.common:
+      raw_dir: data/raw/ml/ml-latest
+      proc_dir: data/processed/ml
+outs:
+- md5: a09e9e2f069ed19ea42a01ec3dcb8295
+  path: data/processed/ml/recommendations.pickle
+  cache: true
+  metric: false
+  persist: false

@@ -1,4 +1,3 @@
-import argparse
 import pickle
 import re
 import os
@@ -6,7 +5,8 @@ import sqlite3
 import pandas as pd
 from tqdm import tqdm
 from os import path
-from ..utils import keep_positive_ratings, count_filter
+from scripts.process_raw import count_filter
+from scripts.config import params
 
 
 def process_raw(input_dir, output_dir, song_users_threshold, user_songs_threshold):
@@ -89,16 +89,9 @@ def process_info(input_dir, output_dir, x2i):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=True,
-                        help='Path to MSD dataset directory')
-    parser.add_argument('--output_dir', required=True,
-                        help='Directory to put processed files into')
-    parser.add_argument('--song_users_threshold', type=int, required=False, default=200,
-                        help='Users per song threshold to filter')
-    parser.add_argument('--user_songs_threshold', type=int, required=False, default=20,
-                        help='Songs per user threshold to filter')
-    args = parser.parse_args()
-
-    process_raw(args.input_dir, args.output_dir,
-                args.song_users_threshold, args.user_songs_threshold)
+    common_params = params['msd']['common']
+    proc_params = params['msd']['process_raw']
+    process_raw(common_params['raw_dir'],
+                common_params['proc_dir'],
+                int(proc_params['song_users_threshold']),
+                int(proc_params['user_songs_threshold']))

@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  rec_server:
+    build: .
+    ports:
+      - "5501:5000"
+    volumes:
+      - type: bind
+        source: ../models
+        target: /models
+      - type: bind
+        source: .
+        target: /code

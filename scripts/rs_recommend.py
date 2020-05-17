@@ -7,10 +7,11 @@ from recoder.model import Recoder
 from recoder.nn import DynamicAutoencoder
 from recoder.data import UsersInteractions
 from os import path
+from scripts.config import params
 
 
-def rs_recommend(input_dir, model_path, item_list):
-    with open(path.join(input_dir, 'x2i.pickle'), 'rb') as handle:
+def rs_recommend(proc_dir, model_path, item_list):
+    with open(path.join(proc_dir, 'x2i.pickle'), 'rb') as handle:
         x2i = pickle.load(handle)
 
     model = DynamicAutoencoder()
@@ -20,7 +21,7 @@ def rs_recommend(input_dir, model_path, item_list):
     interactions = load_item_list(x2i, recoder.num_items, item_list)
 
     out = recoder.predict(interactions)
-    with open(path.join(input_dir, 'recommendations.pickle'), 'wb') as handle:
+    with open(path.join(proc_dir, 'recommendations.pickle'), 'wb') as handle:
         pickle.dump(out[0].detach().squeeze(0).numpy(), handle)
 
 
@@ -40,13 +41,11 @@ def load_item_list(x2i, nitems, item_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=True,
-                        help='Directory with processed dataset')
-    parser.add_argument('--model_path', required=True,
-                        help='Model file path')
-    parser.add_argument('--item_list', required=True,
-                        help='File with items to use for recommendations')
+    parser.add_argument('--domain', required=True,
+                        help='Short name of data domain, e.g. lf for last.fm')
     args = parser.parse_args()
-
-    rs_recommend(args.input_dir, args.model_path,
-                 args.item_list)
+    p = params[args.domain]
+    proc_dir = p['common']['proc_dir']
+    rs_recommend(proc_dir=proc_dir,
+                 model_path=path.join(params['models_dir'], args.domain + '.model'),
+                 item_list=path.join(proc_dir, 'rec_items.csv'))

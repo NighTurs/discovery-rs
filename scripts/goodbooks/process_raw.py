@@ -1,12 +1,12 @@
-import argparse
 import pickle
 import pandas as pd
 import os
 from os import path
-from ..utils import keep_positive_ratings, count_filter
+from scripts.process_raw import keep_positive_ratings, count_filter
+from scripts.config import params
 
 
-def process_raw(input_dir, output_dir, book_users_threshold, user_books_threshold):
+def process_raw(input_dir: str, output_dir: str, book_users_threshold: int, user_books_threshold: int):
     ds = pd.read_csv(path.join(input_dir, 'ratings.csv'))
     print('Overall records:', ds.shape[0])
     print('Overall users:', len(ds['user_id'].unique()))
@@ -37,15 +37,10 @@ def process_raw(input_dir, output_dir, book_users_threshold, user_books_threshol
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=True,
-                        help='Path to goodbooks dataset directory')
-    parser.add_argument('--output_dir', required=True,
-                        help='Directory to put processed files into')
-    parser.add_argument('--book_users_threshold', type=int, required=False, default=5,
-                        help='Users per book threshold to filter')
-    parser.add_argument('--user_books_threshold', type=int, required=False, default=5,
-                        help='Books per user threshold to filter')
-    args = parser.parse_args()
-    process_raw(args.input_dir, args.output_dir,
-                args.book_users_threshold, args.user_books_threshold)
+    common_params = params['gb']['common']
+    proc_params = params['gb']['process_raw']
+
+    process_raw(common_params['raw_dir'],
+                common_params['proc_dir'],
+                int(proc_params['book_users_threshold']),
+                int(proc_params['user_books_threshold']))

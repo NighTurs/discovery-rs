@@ -1,0 +1,15 @@
+md5: eb7bc260f3b176a33fc0b61e4f2a756a
+cmd: (cd -- data/processed/lf && zip lf.zip web.csv web_index.json) && mv data/processed/lf/lf.zip
+  web/data
+wdir: ../..
+deps:
+- md5: d61212650a82950b4f44c97a1be4d00b
+  path: data/processed/lf/web.csv
+- md5: ac236cc255182a6172352cd78e15051d
+  path: data/processed/lf/web_index.json
+outs:
+- md5: f479138ba34bd9195f528d86c484f0d8
+  path: web/data/lf.zip
+  cache: true
+  metric: false
+  persist: false

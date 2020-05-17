@@ -1,0 +1,31 @@
+md5: 54da4f55840034b47022d304e4bf0b7a
+cmd: python -m scripts.tsne_emb --domain lf
+wdir: ../../..
+deps:
+- md5: b779c783dfc1eac0d33c1b2bd9bb7c6a
+  path: models/lf.model
+- md5: 57df353f53c8cc2f0acce70001b95e81
+  path: scripts/tsne_emb.py
+- path: params.yaml
+  params:
+    lf.common:
+      raw_dir: data/raw/lf/lastfm-dataset-360K
+      proc_dir: data/processed/lf
+    lf.tsne_emb:
+      layer_name: de_embedding_layer.weight
+      perplexities:
+      - 50
+      - 500
+      lr: 1000
+      n_iter: 3000
+outs:
+- md5: 63bb0cdc2dec50ecc851e3ee4340e702
+  path: data/processed/lf/kl_divergence
+  cache: true
+  metric: true
+  persist: false
+- md5: 55a2547588c93e1f70cb4667025d3ed5
+  path: data/processed/lf/tsne_emb.csv
+  cache: true
+  metric: false
+  persist: false

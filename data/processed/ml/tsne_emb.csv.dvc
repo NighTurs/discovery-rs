@@ -1,0 +1,31 @@
+md5: a3e1d4861cb1d3c7ad3c356089793be6
+cmd: python -m scripts.tsne_emb --domain ml
+wdir: ../../..
+deps:
+- md5: 058704464bbd8177a18bba27b7bfd720
+  path: models/ml.model
+- md5: 57df353f53c8cc2f0acce70001b95e81
+  path: scripts/tsne_emb.py
+- path: params.yaml
+  params:
+    ml.common:
+      raw_dir: data/raw/ml/ml-latest
+      proc_dir: data/processed/ml
+    ml.tsne_emb:
+      layer_name: de_embedding_layer.weight
+      perplexities:
+      - 50
+      - 500
+      lr: 1000
+      n_iter: 1500
+outs:
+- md5: 4fff1fb091a5c669345a88c0a2b55b5a
+  path: data/processed/ml/kl_divergence
+  cache: true
+  metric: true
+  persist: false
+- md5: 562413b4c7245257f383ed9b2da5ac80
+  path: data/processed/ml/tsne_emb.csv
+  cache: true
+  metric: false
+  persist: false

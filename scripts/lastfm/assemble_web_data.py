@@ -1,8 +1,8 @@
-import argparse
 import pickle
 import pandas as pd
 from os import path
-from ..utils import percentile, rescale_tsne
+from scripts.assemble_web_data import percentile, rescale_tsne
+from scripts.config import params
 
 
 def assemble_web_data(input_dir):
@@ -39,8 +39,4 @@ def assemble_web_data(input_dir):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input_dir', required=True,
-                        help='Directory with processed Lastfm 350K dataset')
-    args = parser.parse_args()
-    assemble_web_data(args.input_dir)
+    assemble_web_data(params['lf']['common']['proc_dir'])

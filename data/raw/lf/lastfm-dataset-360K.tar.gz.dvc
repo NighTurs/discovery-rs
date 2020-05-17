@@ -1,0 +1,11 @@
+md5: f7267ea3ced1a2a3939f2758da5ebe5d
+locked: true
+deps:
+- etag: '"6bdd6b4a-21ed58f7-4a6c0a04a5400"'
+  path: http://mtg.upf.edu/static/datasets/last.fm/lastfm-dataset-360K.tar.gz
+outs:
+- md5: 635e6ed3fc873aa4ba33aba0ebce02b1
+  path: lastfm-dataset-360K.tar.gz
+  cache: true
+  metric: false
+  persist: false

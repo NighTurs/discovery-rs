@@ -1,0 +1,14 @@
+md5: aafc4df0fe56957a46f66df14135c35c
+locked: true
+deps:
+- path: book_tags.csv
+  repo:
+    url: https://github.com/zygmuntz/goodbooks-10k
+    rev: v1.0
+    rev_lock: 150df1674d54605c810128ce9eecbdb356610efe
+outs:
+- md5: 9d6e649b2ccc14341f18b418a315ea4f
+  path: book_tags.csv
+  cache: true
+  metric: false
+  persist: false

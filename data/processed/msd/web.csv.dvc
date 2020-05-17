@@ -1,0 +1,27 @@
+md5: 116dd49237fc2598ac848a74e15cd227
+cmd: python -m scripts.msd.assemble_web_data
+wdir: ../../..
+deps:
+- md5: e315069046f225330851df4da2cdce24
+  path: data/processed/msd/x2i.pickle
+- md5: 3e2991c9eb9524fa40484647d28f846c
+  path: data/processed/msd/recommendations.pickle
+- md5: af410826101dafd239ec6b1e56f1471c
+  path: data/processed/msd/tsne_emb.csv
+- md5: b43a1cf0dcf402258a9fc798952f70a3
+  path: data/processed/msd/info.csv
+- md5: 5430d35ff63f2b994303be40dd41f414
+  path: scripts/msd/assemble_web_data.py
+- md5: 4c60e751c769066ec857a54eff0a69ff
+  path: scripts/assemble_web_data.py
+- path: params.yaml
+  params:
+    msd.common:
+      raw_dir: data/raw/msd
+      proc_dir: data/processed/msd
+outs:
+- md5: bae73711ad54052ccac143d22577f2df
+  path: data/processed/msd/web.csv
+  cache: true
+  metric: false
+  persist: false

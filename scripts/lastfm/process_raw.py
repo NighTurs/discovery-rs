@@ -1,13 +1,17 @@
-import argparse
 import os
 import pickle
 import pandas as pd
-import numpy as np
+from os import path
+from scripts.config import params
 
 
-def process_raw(input, output_dir, playcount_threshold, user_artists_threshold, artist_users_threshold):
+def process_raw(input: str,
+                output_dir: str,
+                playcount_threshold: int,
+                user_artists_threshold: int,
+                artist_users_threshold: int):
     ds = pd.read_csv(input, sep='\t', header=None, names=[
-                     'user', 'artist_mbid', 'artist_name', 'playcount'],
+        'user', 'artist_mbid', 'artist_name', 'playcount'],
                      na_values=[], keep_default_na=False)
     print('Overall records:', ds.shape[0])
     print('Overall users:', len(ds['user'].unique()))
@@ -31,7 +35,8 @@ def process_raw(input, output_dir, playcount_threshold, user_artists_threshold, 
     x2i = {k[0]: v for k, v in a2i.items()}
 
     ua = pd.DataFrame({'user': [u2i[x] for x in ds['user']],
-                       'item': [a2i[(x.artist_name, x.artist_mbid)] for x in ds[['artist_name', 'artist_mbid']].itertuples()]})
+                       'item': [a2i[(x.artist_name, x.artist_mbid)] for x in
+                                ds[['artist_name', 'artist_mbid']].itertuples()]})
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -57,17 +62,10 @@ def artist_user_count_filter(ds, artist_users_threshold):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input', required=True,
-                        help='Path to 350K Lastfm tsv')
-    parser.add_argument('--output_dir', required=True,
-                        help='Directory to put processed files into')
-    parser.add_argument('--playcount_threshold', type=int, required=False, default=40,
-                        help='Record playcount threshold to filter')
-    parser.add_argument('--user_artists_threshold', type=int, required=False, default=20,
-                        help='Artists per user threshold to filter')
-    parser.add_argument('--artist_users_threshold', type=int, required=False, default=20,
-                        help='Users per artist threshold to filter')
-    args = parser.parse_args()
-    process_raw(args.input, args.output_dir, args.playcount_threshold,
-                args.user_artists_threshold, args.artist_users_threshold)
+    common_params = params['lf']['common']
+    proc_params = params['lf']['process_raw']
+    process_raw(path.join(common_params['raw_dir'], 'usersha1-artmbid-artname-plays.tsv'),
+                common_params['proc_dir'],
+                int(proc_params['playcount_threshold']),
+                int(proc_params['user_artists_threshold']),
+                int(proc_params['artist_users_threshold']))

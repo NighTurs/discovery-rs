@@ -1,8 +1,8 @@
-import argparse
 import pickle
 import pandas as pd
 from os import path
-from ..utils import percentile, rescale_tsne
+from scripts.config import params
+from scripts.assemble_web_data import percentile, rescale_tsne
 
 
 def assemble_web_data(raw_dir, processed_dir):
@@ -57,10 +57,6 @@ def assemble_web_data(raw_dir, processed_dir):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--raw_dir', required=True,
-                        help='Directory with raw Movielens dataset')
-    parser.add_argument('--processed_dir', required=True,
-                        help='Directory with processed Movielens dataset')
-    args = parser.parse_args()
-    assemble_web_data(args.raw_dir, args.processed_dir)
+    common_params = params['ml']['common']
+    assemble_web_data(common_params['raw_dir'],
+                      common_params['proc_dir'])
