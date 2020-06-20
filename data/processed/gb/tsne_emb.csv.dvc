@@ -1,10 +1,10 @@
-md5: 5e928d779c34d9d5e0cf890532332a7a
+md5: 1b9924a0cce21506128d56d4e2b60080
 cmd: python -m scripts.tsne_emb --domain gb
 wdir: ../../..
 deps:
-- md5: 9b4ddf6507f44c858486c5edc445091a
+- md5: 268dc3f34c867a9f020eeaf1e98eaeef
   path: models/gb.model
-- md5: 57df353f53c8cc2f0acce70001b95e81
+- md5: 84c656372c6cf5eb095cd29f58b37387
   path: scripts/tsne_emb.py
 - path: params.yaml
   params:
@@ -17,15 +17,14 @@ deps:
       perplexities:
       - 20
       - 200
-      lr: 1000
       n_iter: 1500
 outs:
-- md5: 982da3437c405216dd263a1308138fb0
+- md5: b9441caebb65bf436aa63ba87b9d34cc
   path: data/processed/gb/kl_divergence
   cache: false
   metric: true
   persist: false
-- md5: c4ca13cbe63fa8b7b49732f1c77f2d19
+- md5: 69f3b4aa82b8e60d12abbb146c004cdb
   path: data/processed/gb/tsne_emb.csv
   cache: true
   metric: false

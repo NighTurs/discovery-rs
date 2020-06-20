@@ -1,8 +1,8 @@
-md5: fb5a8b7fc69658e09720bbc90908e704
+md5: 25cc826af6ac73a42b0f7959ac7afe10
 cmd: python -m scripts.rs_recommend --domain msd
 wdir: ../../..
 deps:
-- md5: 57393f92e1cc2a05c5b7527a6a14201d
+- md5: 3a836ba9b2a37b79ccdcedfdbfbfada7
   path: models/msd.model
 - md5: 829d10a37ec487fac39909018c08a6ca
   path: scripts/rs_recommend.py
@@ -12,7 +12,7 @@ deps:
       raw_dir: data/raw/msd
       proc_dir: data/processed/msd
 outs:
-- md5: 3e2991c9eb9524fa40484647d28f846c
+- md5: cffcd68e586d84db958632152dde2269
   path: data/processed/msd/recommendations.pickle
   cache: true
   metric: false

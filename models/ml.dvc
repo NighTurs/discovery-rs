@@ -1,4 +1,4 @@
-md5: a2fa806b11efe6c56a068049edc54574
+md5: 12cc25ea60224b6c2d19ea0191f2d7cb
 cmd: python -m scripts.train_rs --domain ml
 wdir: ..
 deps:
@@ -23,12 +23,12 @@ deps:
       valid_users_pct: 0.1
       valid_items_pct: 0.2
 outs:
-- md5: a4fb8454de8063b144e1d008effce9ad
+- md5: c07d4d7cd50ce924bf348b0278a0ea54
   path: models/ml_metrics.json
-  cache: true
+  cache: false
   metric: true
   persist: false
-- md5: 058704464bbd8177a18bba27b7bfd720
+- md5: f4b4fa7d0729484545409da113fcf20e
   path: models/ml.model
   cache: true
   metric: false

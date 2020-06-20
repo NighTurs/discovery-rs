@@ -1,8 +1,8 @@
-md5: a90ccab60f7ff539de61b2c07e6ae539
+md5: c630cf8828228204a4ccb6330446c50f
 cmd: python -m scripts.rs_recommend --domain lf
 wdir: ../../..
 deps:
-- md5: b779c783dfc1eac0d33c1b2bd9bb7c6a
+- md5: f40bef56663291cd5efd976d75499eb2
   path: models/lf.model
 - md5: 829d10a37ec487fac39909018c08a6ca
   path: scripts/rs_recommend.py
@@ -12,7 +12,7 @@ deps:
       raw_dir: data/raw/lf/lastfm-dataset-360K
       proc_dir: data/processed/lf
 outs:
-- md5: 92ad65cc76ca1132a2f07c79c97af826
+- md5: f3a9b95c98b43d3cc167b99eeaaa545a
   path: data/processed/lf/recommendations.pickle
   cache: true
   metric: false

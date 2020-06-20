@@ -1,4 +1,4 @@
-md5: 543c604206b308f3b704d9448e7f2343
+md5: a5fabf5b5769e994406c3fe88dc9f570
 cmd: python -m scripts.train_rs --domain gb
 wdir: ..
 deps:
@@ -24,12 +24,12 @@ deps:
       valid_users_pct: 0.1
       valid_items_pct: 0.2
 outs:
-- md5: 1ddaa19efae72196c1fa0a689cd89364
+- md5: 0b0dc30c79f6a18632b05cde795dac3f
   path: models/gb_metrics.json
   cache: false
   metric: true
   persist: false
-- md5: 9b4ddf6507f44c858486c5edc445091a
+- md5: 268dc3f34c867a9f020eeaf1e98eaeef
   path: models/gb.model
   cache: true
   metric: false

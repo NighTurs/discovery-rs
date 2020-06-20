@@ -1,4 +1,4 @@
-md5: afab00235f91ac13b51962bfb0b88e85
+md5: 00c608566d9401adde8bc64f20e815ab
 cmd: python -m scripts.goodbooks.process_raw
 wdir: ../../..
 deps:
@@ -22,12 +22,12 @@ outs:
   cache: true
   metric: false
   persist: false
-- md5: d9baac8948c19016e17096b661e9c9a7
+- md5: c5bcaa7d0e4c856e75f4036e91d7df5e
   path: data/processed/gb/u2i.pickle
   cache: true
   metric: false
   persist: false
-- md5: 293e175f92e1e835c481400f26f8d8f5
+- md5: 06268cf23246f5b8d386c372beba405e
   path: data/processed/gb/x2i.pickle
   cache: true
   metric: false

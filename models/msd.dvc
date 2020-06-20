@@ -1,4 +1,4 @@
-md5: 5d162a32c2f4f7d2bab54df2f0fd9074
+md5: 1e11fb25db1d4677c0d1ff463cb5a9a3
 cmd: python -m scripts.train_rs --domain msd
 wdir: ..
 deps:
@@ -23,12 +23,12 @@ deps:
       valid_users_pct: 0.1
       valid_items_pct: 0.2
 outs:
-- md5: c0fbe843679c49bd0b85548ccd9cf454
+- md5: d82ce6c18a452946a1db7ac819e98c2c
   path: models/msd_metrics.json
-  cache: true
+  cache: false
   metric: true
   persist: false
-- md5: 57393f92e1cc2a05c5b7527a6a14201d
+- md5: 3a836ba9b2a37b79ccdcedfdbfbfada7
   path: models/msd.model
   cache: true
   metric: false

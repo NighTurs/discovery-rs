@@ -1,14 +1,14 @@
-md5: eb7b8a660ca805a1e9c7e61e8216f57d
+md5: 0186afab6cc314b5e381065b0591ac16
 cmd: (cd -- data/processed/ml && zip ml.zip web.csv web_index.json) && mv data/processed/ml/ml.zip
   web/data
 wdir: ../..
 deps:
-- md5: cc0b90f578e8a7f0c7146598098eb7da
+- md5: 7a3a550baf7f24623377c4080c30cf1c
   path: data/processed/ml/web.csv
 - md5: c611522e861ebe46ded3c437ee4616dd
   path: data/processed/ml/web_index.json
 outs:
-- md5: 6181d49224e77bb7c21b0e56cd944fed
+- md5: 9a2e4af947a6c7131301ef49f22158c3
   path: web/data/ml.zip
   cache: true
   metric: false

@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.8
 WORKDIR /code
 ENV FLASK_APP rec_server.py
 ENV FLASK_RUN_HOST 0.0.0.0

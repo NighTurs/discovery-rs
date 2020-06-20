@@ -4,13 +4,12 @@ import pandas as pd
 from os import path
 from openTSNE import TSNEEmbedding, affinity
 from openTSNE import initialization
-from openTSNE.callbacks import ErrorLogger
 from typing import List
 
 from scripts.config import params
 
 
-def tsne_emb(model_path: str, proc_dir: str, layer_name: str, perplexities: List[int], lr: int, n_iter: int):
+def tsne_emb(model_path: str, proc_dir: str, layer_name: str, perplexities: List[int], n_iter: int):
     model = torch.load(model_path, map_location=torch.device('cpu'))['model']
     w = model[layer_name].numpy()
 
@@ -29,10 +28,10 @@ def tsne_emb(model_path: str, proc_dir: str, layer_name: str, perplexities: List
         negative_gradient_method="fft",
         n_jobs=-1,
         random_state=4,
-        callbacks=ErrorLogger())
+        verbose=True)
 
     embedding = embedding.optimize(
-        n_iter=n_iter, exaggeration=None, momentum=0.8, learning_rate=lr)
+        n_iter=n_iter, exaggeration=None, momentum=0.8, learning_rate="auto")
     df = pd.DataFrame(embedding, columns=['x', 'y'])
     df.to_csv(path.join(proc_dir, 'tsne_emb.csv'), index=False)
 
@@ -51,5 +50,4 @@ if __name__ == '__main__':
              proc_dir=p['common']['proc_dir'],
              layer_name=pt['layer_name'],
              perplexities=[int(x) for x in pt['perplexities']],
-             lr=pt['lr'],
              n_iter=pt['n_iter'])

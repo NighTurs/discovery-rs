@@ -1,12 +1,12 @@
-md5: 0c47e773599371e62b73d7e90f54744f
+md5: ecf1adbb4fa8dc3724868217176a64b8
 cmd: python -m scripts.goodbooks.assemble_web_data
 wdir: ../../..
 deps:
-- md5: 293e175f92e1e835c481400f26f8d8f5
+- md5: 06268cf23246f5b8d386c372beba405e
   path: data/processed/gb/x2i.pickle
-- md5: c4ca13cbe63fa8b7b49732f1c77f2d19
+- md5: 69f3b4aa82b8e60d12abbb146c004cdb
   path: data/processed/gb/tsne_emb.csv
-- md5: d1a993d42368d4c957ee83a4b8431414
+- md5: fe7bedece5d0f808cb46bfdc6186f95b
   path: data/processed/gb/recommendations.pickle
 - md5: f63289cc0a4fe5f33e2d2bb256d0118a
   path: data/processed/gb/ds.csv
@@ -26,7 +26,7 @@ deps:
       raw_dir: data/raw/goodbooks-10k
       proc_dir: data/processed/gb
 outs:
-- md5: ccf5606ffa3efd58f0fd850a970e98e0
+- md5: 56ee8f38fef3ebf31500fef8fcee7858
   path: data/processed/gb/web.csv
   cache: true
   metric: false

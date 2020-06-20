@@ -1,10 +1,10 @@
-md5: 54da4f55840034b47022d304e4bf0b7a
+md5: 048af927f497814464fe210422710eaf
 cmd: python -m scripts.tsne_emb --domain lf
 wdir: ../../..
 deps:
-- md5: b779c783dfc1eac0d33c1b2bd9bb7c6a
+- md5: f40bef56663291cd5efd976d75499eb2
   path: models/lf.model
-- md5: 57df353f53c8cc2f0acce70001b95e81
+- md5: 84c656372c6cf5eb095cd29f58b37387
   path: scripts/tsne_emb.py
 - path: params.yaml
   params:
@@ -16,15 +16,14 @@ deps:
       perplexities:
       - 50
       - 500
-      lr: 1000
       n_iter: 3000
 outs:
-- md5: 63bb0cdc2dec50ecc851e3ee4340e702
+- md5: 1053f7ff7c75506a50b628d7854c5930
   path: data/processed/lf/kl_divergence
-  cache: true
+  cache: false
   metric: true
   persist: false
-- md5: 55a2547588c93e1f70cb4667025d3ed5
+- md5: 8678c96e7c61df135d28b7803e24b35a
   path: data/processed/lf/tsne_emb.csv
   cache: true
   metric: false

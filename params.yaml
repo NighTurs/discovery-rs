@@ -23,7 +23,6 @@ gb:
     perplexities:
       - 20
       - 200
-    lr: 1000
     n_iter: 1500
 
 lf:
@@ -50,7 +49,6 @@ lf:
     perplexities:
       - 50
       - 500
-    lr: 1000
     n_iter: 3000
 
 ml:
@@ -76,7 +74,6 @@ ml:
     perplexities:
       - 50
       - 500
-    lr: 1000
     n_iter: 1500
 
 msd:
@@ -102,5 +99,4 @@ msd:
     perplexities:
       - 30
       - 300
-    lr: 1000
     n_iter: 3000

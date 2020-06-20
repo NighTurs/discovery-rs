@@ -1,4 +1,4 @@
-md5: e70c9087e86630bf6b93e3077ccea40f
+md5: 3108837a9c6cc7e3ad5f184576507ba4
 cmd: python -m scripts.lastfm.assemble_web_data
 wdir: ../../..
 deps:
@@ -6,9 +6,9 @@ deps:
   path: data/processed/lf/ds.csv
 - md5: c29ce011901439995e473e57fb5e00a8
   path: data/processed/lf/a2i.pickle
-- md5: 92ad65cc76ca1132a2f07c79c97af826
+- md5: f3a9b95c98b43d3cc167b99eeaaa545a
   path: data/processed/lf/recommendations.pickle
-- md5: 55a2547588c93e1f70cb4667025d3ed5
+- md5: 8678c96e7c61df135d28b7803e24b35a
   path: data/processed/lf/tsne_emb.csv
 - md5: fe004f1458cd7e527ee84b4e5924d99c
   path: data/processed/lf/musicbrainz.csv
@@ -22,7 +22,7 @@ deps:
       raw_dir: data/raw/lf/lastfm-dataset-360K
       proc_dir: data/processed/lf
 outs:
-- md5: d61212650a82950b4f44c97a1be4d00b
+- md5: da8088a883098c7e807066bf2048594a
   path: data/processed/lf/web.csv
   cache: true
   metric: false

@@ -1,4 +1,4 @@
-md5: faacc2e497806a89a969ca7aac6f9c98
+md5: abb0b3d70cb8e818cb75224fb84c738d
 cmd: python -m scripts.movielens.process_raw
 wdir: ../../..
 deps:
@@ -22,12 +22,12 @@ outs:
   cache: true
   metric: false
   persist: false
-- md5: 7835ac022423522bee4b43b96b1d6e50
+- md5: 59d321534fa9b64ab3dbbba01bec1cbf
   path: data/processed/ml/u2i.pickle
   cache: true
   metric: false
   persist: false
-- md5: 51e8648042369fa68771d5c9db3b5236
+- md5: 400dcf13679539e8ac013ed95598667b
   path: data/processed/ml/x2i.pickle
   cache: true
   metric: false
