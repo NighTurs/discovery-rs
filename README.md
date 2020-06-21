@@ -39,9 +39,10 @@ Web application is a static page that uses WebGL (three.js) for smooth visualiza
 
 ## Getting recommendations
 
-Donwload models from [here](https://drive.google.com/open?id=1bh6uWk7h2anGRXcHYVswpJXv_CnbyJWV) and place them in "models" directory. Then run:
+Run recommendations server locally:
 
 ```bash
+./download-models.sh
 cd rec-server
 docker-compose up
 ```
