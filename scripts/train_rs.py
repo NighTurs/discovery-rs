@@ -31,6 +31,8 @@ def train_rs(proc_dir: str,
     ds = pd.read_csv(path.join(proc_dir, 'ds.csv'))
     ds['inter'] = 1
 
+    item_identity = {i: i for i in ds['item']}
+
     if wo_eval:
         train = ds
     else:
@@ -42,7 +44,6 @@ def train_rs(proc_dir: str,
 
     print('Making sparse matrices...')
 
-    item_identity = {i: i for i in train['item']}
     common_params = {
         'user_col': 'user',
         'item_col': 'item',

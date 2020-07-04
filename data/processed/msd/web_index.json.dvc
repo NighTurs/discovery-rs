@@ -1,9 +1,11 @@
-md5: fc61132dcce7a3e07cc07657445c90c7
+md5: 37ff755d197d934286fce38dfa32f23f
 cmd: node scripts/indexer.js data/processed/msd
 wdir: ../../..
 deps:
 - md5: 4d4359c4f2f7f04103c9d41759d49bb5
   path: scripts/indexer.js
+- md5: f13069f106a56cb5847bd950ba8dad67
+  path: data/processed/msd/web.csv
 outs:
 - md5: 5ff1e04a99ea8b3825abae20c9692e44
   path: data/processed/msd/web_index.json

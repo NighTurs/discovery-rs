@@ -1,9 +1,11 @@
-md5: f1a1dfdad811a67377779e93dee4549e
+md5: a1b6f6287717f1fe31c0ab2041a825c7
 cmd: node scripts/indexer.js data/processed/lf
 wdir: ../../..
 deps:
 - md5: 4d4359c4f2f7f04103c9d41759d49bb5
   path: scripts/indexer.js
+- md5: da8088a883098c7e807066bf2048594a
+  path: data/processed/lf/web.csv
 outs:
 - md5: ac236cc255182a6172352cd78e15051d
   path: data/processed/lf/web_index.json

@@ -1,6 +1,6 @@
 torch==1.5.1
 torchvision==0.6.1
-dvc
+dvc==0.94.1
 openTSNE
 numpy
 pandas
