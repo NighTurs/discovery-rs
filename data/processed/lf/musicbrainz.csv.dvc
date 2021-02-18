@@ -1,11 +1,8 @@
-md5: 199ac2cbe0bbbfff930f52ab1e0e0806
-locked: true
+md5: cb3e6a4631faaa6ba7ed34f8f6a83822
 deps:
 - etag: '"fe004f1458cd7e527ee84b4e5924d99c"'
   path: https://nighturs.s3-eu-west-1.amazonaws.com/discovery-rs/data/processed/lf/musicbrainz.csv
 outs:
 - md5: fe004f1458cd7e527ee84b4e5924d99c
   path: musicbrainz.csv
-  cache: true
-  metric: false
-  persist: false
+frozen: true

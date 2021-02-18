@@ -1,5 +1,4 @@
-md5: 174b8da3951a4d148e16a6efd15019f3
-locked: true
+md5: 083e951e0e30ae18970a5a700ad850c6
 deps:
 - path: books.csv
   repo:
@@ -9,6 +8,4 @@ deps:
 outs:
 - md5: 0854aebb4f0221e653ebaf5d18eeb144
   path: books.csv
-  cache: true
-  metric: false
-  persist: false
+frozen: true

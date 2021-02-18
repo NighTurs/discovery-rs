@@ -1,5 +1,4 @@
-md5: aafc4df0fe56957a46f66df14135c35c
-locked: true
+md5: 3c70a06f4cb886e24648d5272989f751
 deps:
 - path: book_tags.csv
   repo:
@@ -9,6 +8,4 @@ deps:
 outs:
 - md5: 9d6e649b2ccc14341f18b418a315ea4f
   path: book_tags.csv
-  cache: true
-  metric: false
-  persist: false
+frozen: true

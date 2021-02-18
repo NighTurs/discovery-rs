@@ -1,0 +1,350 @@
+stages:
+  lf_unpack_raw:
+    cmd: tar xvzf lastfm-dataset-360K.tar.gz
+    wdir: data/raw/lf
+    deps:
+      - lastfm-dataset-360K.tar.gz
+    outs:
+      - lastfm-dataset-360K
+  lf_process_raw:
+    cmd: python -m scripts.lastfm.process_raw
+    deps:
+    - data/raw/lf/lastfm-dataset-360K
+    - scripts/lastfm/process_raw.py
+    params:
+    - lf.common
+    - lf.process_raw
+    outs:
+    - data/processed/lf/a2i.pickle
+    - data/processed/lf/ds.csv
+    - data/processed/lf/u2i.pickle
+    - data/processed/lf/x2i.pickle
+  lf_model:
+    cmd: python -m scripts.train_rs --domain lf
+    deps:
+    - data/processed/lf/ds.csv
+    - scripts/train_rs.py
+    params:
+    - lf.common
+    - lf.train_rs
+    outs:
+    - models/lf.model
+    metrics:
+    - models/lf_metrics.json:
+        cache: false
+  lf_recommendations:
+    cmd: python -m scripts.rs_recommend --domain lf
+    deps:
+    - models/lf.model
+    - scripts/rs_recommend.py
+    params:
+    - lf.common
+    outs:
+    - data/processed/lf/recommendations.pickle
+  lf_tsne_emb:
+    cmd: python -m scripts.tsne_emb --domain lf
+    deps:
+    - models/lf.model
+    - scripts/tsne_emb.py
+    params:
+    - lf.common
+    - lf.tsne_emb
+    outs:
+    - data/processed/lf/tsne_emb.csv
+    metrics:
+    - data/processed/lf/kl_divergence:
+        cache: false
+  lf_web_csv:
+    cmd: python -m scripts.lastfm.assemble_web_data
+    deps:
+    - data/processed/lf/a2i.pickle
+    - data/processed/lf/ds.csv
+    - data/processed/lf/musicbrainz.csv
+    - data/processed/lf/recommendations.pickle
+    - data/processed/lf/tsne_emb.csv
+    - scripts/assemble_web_data.py
+    - scripts/lastfm/assemble_web_data.py
+    params:
+    - lf.common
+    outs:
+    - data/processed/lf/web.csv
+  lf_web_index:
+    cmd: node scripts/indexer.js data/processed/lf
+    deps:
+      - data/processed/lf/web.csv
+      - scripts/indexer.js
+    outs:
+      - data/processed/lf/web_index.json
+  lf_zip:
+    cmd: (cd -- data/processed/lf && zip lf.zip web.csv web_index.json) && mv data/processed/lf/lf.zip
+      web/data
+    deps:
+      - data/processed/lf/web.csv
+      - data/processed/lf/web_index.json
+    outs:
+      - web/data/lf.zip
+  ml_unpack_raw:
+    cmd: unzip ml-latest.zip
+    wdir: data/raw/ml
+    deps:
+      - ml-latest.zip
+    outs:
+      - ml-latest
+  ml_process_raw:
+    cmd: python -m scripts.movielens.process_raw
+    deps:
+    - data/raw/ml/ml-latest
+    - scripts/movielens/process_raw.py
+    - scripts/process_raw.py
+    params:
+    - ml.common
+    - ml.process_raw
+    outs:
+    - data/processed/ml/ds.csv
+    - data/processed/ml/u2i.pickle
+    - data/processed/ml/x2i.pickle
+  ml_model:
+    cmd: python -m scripts.train_rs --domain ml
+    deps:
+      - data/processed/ml/ds.csv
+      - scripts/train_rs.py
+    params:
+      - ml.common
+      - ml.train_rs
+    outs:
+      - models/ml.model
+    metrics:
+      - models/ml_metrics.json:
+          cache: false
+  ml_recommendations:
+    cmd: python -m scripts.rs_recommend --domain ml
+    deps:
+    - models/ml.model
+    - scripts/rs_recommend.py
+    params:
+    - ml.common
+    outs:
+    - data/processed/ml/recommendations.pickle
+  ml_tsne_emb:
+    cmd: python -m scripts.tsne_emb --domain ml
+    deps:
+    - models/ml.model
+    - scripts/tsne_emb.py
+    params:
+    - ml.common
+    - ml.tsne_emb
+    outs:
+    - data/processed/ml/tsne_emb.csv
+    metrics:
+    - data/processed/ml/kl_divergence:
+        cache: false
+  ml_web_csv:
+    cmd: python -m scripts.movielens.assemble_web_data
+    deps:
+      - data/processed/ml/ds.csv
+      - data/processed/ml/recommendations.pickle
+      - data/processed/ml/tsne_emb.csv
+      - data/processed/ml/x2i.pickle
+      - data/raw/ml/ml-latest
+      - scripts/assemble_web_data.py
+      - scripts/movielens/assemble_web_data.py
+    params:
+      - ml.common
+    outs:
+      - data/processed/ml/web.csv
+  ml_web_index:
+    cmd: node scripts/indexer.js data/processed/ml
+    deps:
+      - data/processed/ml/web.csv
+      - scripts/indexer.js
+    outs:
+      - data/processed/ml/web_index.json
+  ml_zip:
+    cmd: (cd -- data/processed/ml && zip ml.zip web.csv web_index.json) && mv data/processed/ml/ml.zip
+      web/data
+    deps:
+      - data/processed/ml/web.csv
+      - data/processed/ml/web_index.json
+    outs:
+      - web/data/ml.zip
+  msd_download_raw:
+    cmd: ./download_msd.sh
+    wdir: data/raw/msd
+    deps:
+      - download_msd.sh
+    outs:
+      - artist_term.db
+      - sid_mismatches.txt
+      - track_metadata.db
+      - train_triplets.txt.zip
+      - unique_tracks.txt
+  msd_unpack_raw:
+    cmd: unzip train_triplets.txt.zip
+    wdir: data/raw/msd
+    deps:
+      - train_triplets.txt.zip
+    outs:
+      - train_triplets.txt
+  msd_process_raw:
+    cmd: python -m scripts.msd.process_raw
+    deps:
+      - data/raw/msd/artist_term.db
+      - data/raw/msd/sid_mismatches.txt
+      - data/raw/msd/track_metadata.db
+      - data/raw/msd/train_triplets.txt
+      - data/raw/msd/unique_tracks.txt
+      - scripts/movielens/process_raw.py
+      - scripts/process_raw.py
+    params:
+      - msd.common
+      - msd.process_raw
+    outs:
+      - data/processed/msd/ds.csv
+      - data/processed/msd/info.csv
+      - data/processed/msd/u2i.pickle
+      - data/processed/msd/x2i.pickle
+  msd_model:
+    cmd: python -m scripts.train_rs --domain msd
+    deps:
+      - data/processed/msd/ds.csv
+      - scripts/train_rs.py
+    params:
+      - msd.common
+      - msd.train_rs
+    outs:
+      - models/msd.model
+    metrics:
+      - models/msd_metrics.json:
+          cache: false
+  msd_recommendations:
+    cmd: python -m scripts.rs_recommend --domain msd
+    deps:
+    - models/msd.model
+    - scripts/rs_recommend.py
+    params:
+    - msd.common
+    outs:
+    - data/processed/msd/recommendations.pickle
+  msd_tsne_emb:
+    cmd: python -m scripts.tsne_emb --domain msd
+    deps:
+    - models/msd.model
+    - scripts/tsne_emb.py
+    params:
+    - msd.common
+    - msd.tsne_emb
+    outs:
+    - data/processed/msd/tsne_emb.csv
+    metrics:
+    - data/processed/msd/kl_divergence:
+        cache: false
+  msd_web_csv:
+    cmd: python -m scripts.msd.assemble_web_data
+    deps:
+    - data/processed/msd/info.csv
+    - data/processed/msd/recommendations.pickle
+    - data/processed/msd/tsne_emb.csv
+    - data/processed/msd/x2i.pickle
+    - scripts/assemble_web_data.py
+    - scripts/msd/assemble_web_data.py
+    params:
+    - msd.common
+    outs:
+    - data/processed/msd/web.csv
+  msd_web_index:
+    cmd: node scripts/indexer.js data/processed/msd
+    deps:
+    - data/processed/msd/web.csv
+    - scripts/indexer.js
+    outs:
+    - data/processed/msd/web_index.json
+  msd_zip:
+    cmd: (cd -- data/processed/msd && zip msd.zip web.csv web_index.json) && mv data/processed/msd/msd.zip
+      web/data
+    deps:
+      - data/processed/msd/web.csv
+      - data/processed/msd/web_index.json
+    outs:
+      - web/data/msd.zip
+  gb_process_raw:
+    cmd: python -m scripts.goodbooks.process_raw
+    deps:
+    - data/raw/goodbooks-10k/ratings.csv
+    - scripts/goodbooks/process_raw.py
+    - scripts/process_raw.py
+    params:
+    - gb.common
+    - gb.process_raw
+    outs:
+    - data/processed/gb/ds.csv
+    - data/processed/gb/u2i.pickle
+    - data/processed/gb/x2i.pickle
+  gb_model:
+    cmd: python -m scripts.train_rs --domain gb
+    deps:
+      - data/processed/gb/ds.csv
+      - scripts/train_rs.py
+    params:
+      - gb.common
+      - gb.train_rs
+      - models_dir
+    outs:
+      - models/gb.model
+    metrics:
+      - models/gb_metrics.json:
+          cache: false
+  gb_tsne_emb:
+    cmd: python -m scripts.tsne_emb --domain gb
+    deps:
+    - models/gb.model
+    - scripts/tsne_emb.py
+    params:
+    - gb.common
+    - gb.tsne_emb
+    - models_dir
+    outs:
+    - data/processed/gb/tsne_emb.csv
+    metrics:
+    - data/processed/gb/kl_divergence:
+        cache: false
+  gb_recommendations:
+    cmd: python -m scripts.rs_recommend --domain gb
+    deps:
+    - models/gb.model
+    - scripts/rs_recommend.py
+    params:
+    - gb.common
+    - models_dir
+    outs:
+    - data/processed/gb/recommendations.pickle
+  gb_web_csv:
+    cmd: python -m scripts.goodbooks.assemble_web_data
+    deps:
+      - data/processed/gb/ds.csv
+      - data/processed/gb/recommendations.pickle
+      - data/processed/gb/tsne_emb.csv
+      - data/processed/gb/x2i.pickle
+      - data/raw/goodbooks-10k/book_tags.csv
+      - data/raw/goodbooks-10k/books.csv
+      - data/raw/goodbooks-10k/tags.csv
+      - scripts/assemble_web_data.py
+      - scripts/goodbooks/assemble_web_data.py
+    params:
+      - gb.common
+    outs:
+      - data/processed/gb/web.csv
+  gb_web_index:
+    cmd: node scripts/indexer.js data/processed/gb
+    deps:
+    - data/processed/gb/web.csv
+    - scripts/indexer.js
+    outs:
+    - data/processed/gb/web_index.json
+  gb_zip:
+    cmd: (cd -- data/processed/gb && zip gb.zip web.csv web_index.json) && mv data/processed/gb/gb.zip
+      web/data
+    deps:
+    - data/processed/gb/web.csv
+    - data/processed/gb/web_index.json
+    outs:
+    - web/data/gb.zip

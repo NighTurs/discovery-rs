@@ -1,5 +1,4 @@
-md5: 5687ef8f7a7a85430a63cd8a0aa31e94
-locked: true
+md5: 22ff789eb19ae9318cb44885ada13d1a
 deps:
 - path: tags.csv
   repo:
@@ -9,6 +8,4 @@ deps:
 outs:
 - md5: 57ba95eb75603a3a76d1eae2277e5c15
   path: tags.csv
-  cache: true
-  metric: false
-  persist: false
+frozen: true

@@ -1,0 +1,732 @@
+lf_web_index:
+  cmd: node scripts/indexer.js data/processed/lf
+  deps:
+  - path: data/processed/lf/web.csv
+    md5: a52797e55c6371dd4d13719e54b19324
+    size: 3261852
+  - path: scripts/indexer.js
+    md5: 4d4359c4f2f7f04103c9d41759d49bb5
+    size: 740
+  outs:
+  - path: data/processed/lf/web_index.json
+    md5: 3976926306be788e8b3890d26144ab53
+    size: 3765553
+lf_process_raw:
+  cmd: python -m scripts.lastfm.process_raw
+  deps:
+  - path: data/raw/lf/lastfm-dataset-360K
+    md5: 6a0c85cdf0988870cfb49f7b15120b4d.dir
+    size: 1667628769
+    nfiles: 4
+  - path: scripts/lastfm/process_raw.py
+    md5: fada63f4e61e67dc0ade1dbf6e0dbd7d
+    size: 3050
+  params:
+    params.yaml:
+      lf.common:
+        raw_dir: data/raw/lf/lastfm-dataset-360K
+        proc_dir: data/processed/lf
+      lf.process_raw:
+        playcount_threshold: 40
+        artist_users_threshold: 20
+        user_artists_threshold: 20
+  outs:
+  - path: data/processed/lf/a2i.pickle
+    md5: cab8966de84b2ad1506f4d56a9da4bee
+    size: 1935213
+  - path: data/processed/lf/ds.csv
+    md5: 382a398206f35cc438d91bc117905777
+  - path: data/processed/lf/u2i.pickle
+    md5: 51c4c462cf3c62c85fc8b2e962409ca0
+    size: 12366136
+  - path: data/processed/lf/x2i.pickle
+    md5: d510a5721712b8f6899597cab81d8dd6
+    size: 594367
+lf_recommendations:
+  cmd: python -m scripts.rs_recommend --domain lf
+  deps:
+  - path: models/lf.model
+    md5: 7c81094444f45798af19f833a966b269
+    size: 162418459
+  - path: scripts/rs_recommend.py
+    md5: 829d10a37ec487fac39909018c08a6ca
+    size: 1698
+  params:
+    params.yaml:
+      lf.common:
+        raw_dir: data/raw/lf/lastfm-dataset-360K
+        proc_dir: data/processed/lf
+  outs:
+  - path: data/processed/lf/recommendations.pickle
+    md5: b9993392124c0551998543f5c62c4bb3
+    size: 133188
+lf_tsne_emb:
+  cmd: python -m scripts.tsne_emb --domain lf
+  deps:
+  - path: models/lf.model
+    md5: 7c81094444f45798af19f833a966b269
+    size: 162418459
+  - path: scripts/tsne_emb.py
+    md5: 84c656372c6cf5eb095cd29f58b37387
+    size: 1731
+  params:
+    params.yaml:
+      lf.common:
+        raw_dir: data/raw/lf/lastfm-dataset-360K
+        proc_dir: data/processed/lf
+      lf.tsne_emb:
+        layer_name: de_embedding_layer.weight
+        perplexities:
+        - 50
+        - 500
+        n_iter: 3000
+  outs:
+  - path: data/processed/lf/kl_divergence
+    md5: 3d61e8bafc22220883c09d61e19f582d
+    size: 6
+  - path: data/processed/lf/tsne_emb.csv
+    md5: 1c6336edbd77d7f873e5bf0f35681641
+    size: 1251100
+lf_web_csv:
+  cmd: python -m scripts.lastfm.assemble_web_data
+  deps:
+  - path: data/processed/lf/a2i.pickle
+    md5: cab8966de84b2ad1506f4d56a9da4bee
+    size: 1935213
+  - path: data/processed/lf/ds.csv
+    md5: 382a398206f35cc438d91bc117905777
+    size: 128024195
+  - path: data/processed/lf/musicbrainz.csv
+    md5: fe004f1458cd7e527ee84b4e5924d99c
+    size: 10232198
+  - path: data/processed/lf/recommendations.pickle
+    md5: b9993392124c0551998543f5c62c4bb3
+    size: 133188
+  - path: data/processed/lf/tsne_emb.csv
+    md5: 1c6336edbd77d7f873e5bf0f35681641
+    size: 1251100
+  - path: scripts/assemble_web_data.py
+    md5: 4c60e751c769066ec857a54eff0a69ff
+    size: 468
+  - path: scripts/lastfm/assemble_web_data.py
+    md5: 3500f0d9f24882df2a67b244520439a6
+    size: 1893
+  params:
+    params.yaml:
+      lf.common:
+        raw_dir: data/raw/lf/lastfm-dataset-360K
+        proc_dir: data/processed/lf
+  outs:
+  - path: data/processed/lf/web.csv
+    md5: a52797e55c6371dd4d13719e54b19324
+    size: 3261852
+ml_web_index:
+  cmd: node scripts/indexer.js data/processed/ml
+  deps:
+  - path: data/processed/ml/web.csv
+    md5: 9da168e7c3feb8a2db76290271b10426
+    size: 3409587
+  - path: scripts/indexer.js
+    md5: 4d4359c4f2f7f04103c9d41759d49bb5
+    size: 740
+  outs:
+  - path: data/processed/ml/web_index.json
+    md5: 4e31e12d19fdee2f4d237d809e00cead
+    size: 3168734
+ml_web_csv:
+  cmd: python -m scripts.movielens.assemble_web_data
+  deps:
+  - path: data/processed/ml/ds.csv
+    md5: f831d3a9ccf599a6b9c3d8ad7c801052
+    size: 67482230
+  - path: data/processed/ml/recommendations.pickle
+    md5: a61392725ea984b7b83776ed4ef78bb4
+    size: 61875
+  - path: data/processed/ml/tsne_emb.csv
+    md5: 7ddc72e51599653b2dd9c0aa7ac845cf
+    size: 583830
+  - path: data/processed/ml/x2i.pickle
+    md5: beda07a49a9d93a3aa7144c09ba734b9
+    size: 339402
+  - path: data/raw/ml/ml-latest
+    md5: 6ffe813977fb6a0f763b048736291d1d.dir
+    size: 1217950223
+    nfiles: 7
+  - path: scripts/assemble_web_data.py
+    md5: 4c60e751c769066ec857a54eff0a69ff
+    size: 468
+  - path: scripts/movielens/assemble_web_data.py
+    md5: 2fb7a6483d575a5af7ccee045c069456
+    size: 2944
+  params:
+    params.yaml:
+      ml.common:
+        raw_dir: data/raw/ml/ml-latest
+        proc_dir: data/processed/ml
+  outs:
+  - path: data/processed/ml/web.csv
+    md5: 9da168e7c3feb8a2db76290271b10426
+    size: 3409587
+ml_recommendations:
+  cmd: python -m scripts.rs_recommend --domain ml
+  deps:
+  - path: models/ml.model
+    md5: f6c8d22b3bb8cdd50e9e23f7f6e5ac48
+    size: 75896027
+  - path: scripts/rs_recommend.py
+    md5: 829d10a37ec487fac39909018c08a6ca
+    size: 1698
+  params:
+    params.yaml:
+      ml.common:
+        raw_dir: data/raw/ml/ml-latest
+        proc_dir: data/processed/ml
+  outs:
+  - path: data/processed/ml/recommendations.pickle
+    md5: a61392725ea984b7b83776ed4ef78bb4
+    size: 61875
+ml_process_raw:
+  cmd: python -m scripts.movielens.process_raw
+  deps:
+  - path: data/raw/ml/ml-latest
+    md5: 6ffe813977fb6a0f763b048736291d1d.dir
+    size: 1217950223
+    nfiles: 7
+  - path: scripts/movielens/process_raw.py
+    md5: 4fe4ffddfb37e9a9c2ef889de9cb2b7b
+    size: 1788
+  - path: scripts/process_raw.py
+    md5: ddf3322497523480163e63c8a2799049
+    size: 940
+  params:
+    params.yaml:
+      ml.common:
+        raw_dir: data/raw/ml/ml-latest
+        proc_dir: data/processed/ml
+      ml.process_raw:
+        movie_users_threshold: 5
+        user_movies_threshold: 5
+  outs:
+  - path: data/processed/ml/ds.csv
+    md5: f831d3a9ccf599a6b9c3d8ad7c801052
+  - path: data/processed/ml/u2i.pickle
+    md5: ea9b7fde608fc3b445d38a3f0a71b4ad
+    size: 4364701
+  - path: data/processed/ml/x2i.pickle
+    md5: beda07a49a9d93a3aa7144c09ba734b9
+    size: 339402
+ml_tsne_emb:
+  cmd: python -m scripts.tsne_emb --domain ml
+  deps:
+  - path: models/ml.model
+    md5: f6c8d22b3bb8cdd50e9e23f7f6e5ac48
+    size: 75896027
+  - path: scripts/tsne_emb.py
+    md5: 84c656372c6cf5eb095cd29f58b37387
+    size: 1731
+  params:
+    params.yaml:
+      ml.common:
+        raw_dir: data/raw/ml/ml-latest
+        proc_dir: data/processed/ml
+      ml.tsne_emb:
+        layer_name: de_embedding_layer.weight
+        perplexities:
+        - 50
+        - 500
+        n_iter: 1500
+  outs:
+  - path: data/processed/ml/kl_divergence
+    md5: b29851485f3b0b85223ba885697ff93a
+    size: 6
+  - path: data/processed/ml/tsne_emb.csv
+    md5: 7ddc72e51599653b2dd9c0aa7ac845cf
+    size: 583830
+msd_recommendations:
+  cmd: python -m scripts.rs_recommend --domain msd
+  deps:
+  - path: models/msd.model
+    md5: 925855be550eed35777bf471f944b46e
+    size: 1308481883
+  - path: scripts/rs_recommend.py
+    md5: 829d10a37ec487fac39909018c08a6ca
+    size: 1698
+  params:
+    params.yaml:
+      msd.common:
+        raw_dir: data/raw/msd
+        proc_dir: data/processed/msd
+  outs:
+  - path: data/processed/msd/recommendations.pickle
+    md5: 38b2ab1188ddfa7445988dc8ef91feb3
+    size: 433926
+msd_tsne_emb:
+  cmd: python -m scripts.tsne_emb --domain msd
+  deps:
+  - path: models/msd.model
+    md5: 925855be550eed35777bf471f944b46e
+    size: 1308481883
+  - path: scripts/tsne_emb.py
+    md5: 84c656372c6cf5eb095cd29f58b37387
+    size: 1731
+  params:
+    params.yaml:
+      msd.common:
+        raw_dir: data/raw/msd
+        proc_dir: data/processed/msd
+      msd.tsne_emb:
+        layer_name: de_embedding_layer.weight
+        perplexities:
+        - 30
+        - 300
+        n_iter: 3000
+  outs:
+  - path: data/processed/msd/kl_divergence
+    md5: 2f8d7394a794115cc9afd8baecf7d07a
+    size: 6
+  - path: data/processed/msd/tsne_emb.csv
+    md5: bffbe7cbd14430d709ea894e8216d5a4
+    size: 4088726
+msd_web_csv:
+  cmd: python -m scripts.msd.assemble_web_data
+  deps:
+  - path: data/processed/msd/info.csv
+    md5: b43a1cf0dcf402258a9fc798952f70a3
+    size: 14057264
+  - path: data/processed/msd/recommendations.pickle
+    md5: 38b2ab1188ddfa7445988dc8ef91feb3
+    size: 433926
+  - path: data/processed/msd/tsne_emb.csv
+    md5: bffbe7cbd14430d709ea894e8216d5a4
+    size: 4088726
+  - path: data/processed/msd/x2i.pickle
+    md5: 76c4481053181bac9dfdce36708bd678
+    size: 2688739
+  - path: scripts/assemble_web_data.py
+    md5: 4c60e751c769066ec857a54eff0a69ff
+    size: 468
+  - path: scripts/msd/assemble_web_data.py
+    md5: 5430d35ff63f2b994303be40dd41f414
+    size: 1530
+  params:
+    params.yaml:
+      msd.common:
+        raw_dir: data/raw/msd
+        proc_dir: data/processed/msd
+  outs:
+  - path: data/processed/msd/web.csv
+    md5: efe5366679d5ae3fd2be84be75e4985a
+    size: 16684942
+msd_process_raw:
+  cmd: python -m scripts.msd.process_raw
+  deps:
+  - path: data/raw/msd/artist_term.db
+    md5: 7c1cceb7b8420691077f10b8a05dec32
+    size: 138974208
+  - path: data/raw/msd/sid_mismatches.txt
+    md5: 2c082a9cae76012e471649dc9c804913
+    size: 2026182
+  - path: data/raw/msd/track_metadata.db
+    md5: 89705ce338a360ddcf7e527cd91f8328
+    size: 746180608
+  - path: data/raw/msd/train_triplets.txt
+    md5: d0217d586f7b6a82d6a2611b922dc88d
+    size: 3001659271
+  - path: data/raw/msd/unique_tracks.txt
+    md5: a02eb8275b10286d678309a19e229bd0
+    size: 84046293
+  - path: scripts/movielens/process_raw.py
+    md5: 4fe4ffddfb37e9a9c2ef889de9cb2b7b
+    size: 1788
+  - path: scripts/process_raw.py
+    md5: ddf3322497523480163e63c8a2799049
+    size: 940
+  params:
+    params.yaml:
+      msd.common:
+        raw_dir: data/raw/msd
+        proc_dir: data/processed/msd
+      msd.process_raw:
+        song_users_threshold: 40
+        user_songs_threshold: 20
+  outs:
+  - path: data/processed/msd/ds.csv
+    md5: 1408c6b64ef775055779c5bd8fb7d0da
+  - path: data/processed/msd/info.csv
+    md5: b43a1cf0dcf402258a9fc798952f70a3
+  - path: data/processed/msd/u2i.pickle
+    md5: c8549ae0c800a35573a768707f9409d0
+    size: 29050872
+  - path: data/processed/msd/x2i.pickle
+    md5: 76c4481053181bac9dfdce36708bd678
+    size: 2688739
+msd_web_index:
+  cmd: node scripts/indexer.js data/processed/msd
+  deps:
+  - path: data/processed/msd/web.csv
+    md5: efe5366679d5ae3fd2be84be75e4985a
+    size: 16684942
+  - path: scripts/indexer.js
+    md5: 4d4359c4f2f7f04103c9d41759d49bb5
+    size: 740
+  outs:
+  - path: data/processed/msd/web_index.json
+    md5: 995926bc5f271b586692e8c32d164cb3
+    size: 13850549
+gb_process_raw:
+  cmd: python -m scripts.goodbooks.process_raw
+  deps:
+  - path: data/raw/goodbooks-10k/ratings.csv
+    md5: 3000836fc622c9c6d3ba021ce5a28835
+    size: 72126826
+  - path: scripts/goodbooks/process_raw.py
+    md5: 5cde1c74053dfc3ea7c657f099dbdec6
+    size: 1806
+  - path: scripts/process_raw.py
+    md5: ddf3322497523480163e63c8a2799049
+    size: 940
+  params:
+    params.yaml:
+      gb.common:
+        raw_dir: data/raw/goodbooks-10k
+        proc_dir: data/processed/gb
+      gb.process_raw:
+        book_users_threshold: 5
+        user_books_threshold: 5
+  outs:
+  - path: data/processed/gb/ds.csv
+    md5: f63289cc0a4fe5f33e2d2bb256d0118a
+  - path: data/processed/gb/u2i.pickle
+    md5: 65f8c11b01da91eea13edbb5b9e5f729
+    size: 1173298
+  - path: data/processed/gb/x2i.pickle
+    md5: b74ab3a14e9c6937745679d854ab1d71
+    size: 219758
+gb_tsne_emb:
+  cmd: python -m scripts.tsne_emb --domain gb
+  deps:
+  - path: models/gb.model
+    md5: 3cc79c490a6d67019d3d5077e85dd598
+    size: 48607323
+  - path: scripts/tsne_emb.py
+    md5: 84c656372c6cf5eb095cd29f58b37387
+    size: 1731
+  params:
+    params.yaml:
+      gb.common:
+        raw_dir: data/raw/goodbooks-10k
+        proc_dir: data/processed/gb
+      gb.tsne_emb:
+        layer_name: de_embedding_layer.weight
+        perplexities:
+        - 20
+        - 200
+        n_iter: 1500
+      models_dir: models
+  outs:
+  - path: data/processed/gb/kl_divergence
+    md5: 0bf129ad03d4b65bd0787a8b700b7a80
+    size: 6
+  - path: data/processed/gb/tsne_emb.csv
+    md5: 81d47eda6b15a9074d5be5e5c2730b37
+    size: 376155
+gb_web_csv:
+  cmd: python -m scripts.goodbooks.assemble_web_data
+  deps:
+  - path: data/processed/gb/ds.csv
+    md5: f63289cc0a4fe5f33e2d2bb256d0118a
+    size: 23347013
+  - path: data/processed/gb/recommendations.pickle
+    md5: b098d7a15fd612e98e6f6b93d2b0a4cd
+    size: 40127
+  - path: data/processed/gb/tsne_emb.csv
+    md5: 81d47eda6b15a9074d5be5e5c2730b37
+    size: 376155
+  - path: data/processed/gb/x2i.pickle
+    md5: b74ab3a14e9c6937745679d854ab1d71
+    size: 219758
+  - path: data/raw/goodbooks-10k/book_tags.csv
+    md5: 9d6e649b2ccc14341f18b418a315ea4f
+    size: 16665883
+  - path: data/raw/goodbooks-10k/books.csv
+    md5: 0854aebb4f0221e653ebaf5d18eeb144
+    size: 3286659
+  - path: data/raw/goodbooks-10k/tags.csv
+    md5: 57ba95eb75603a3a76d1eae2277e5c15
+    size: 722480
+  - path: scripts/assemble_web_data.py
+    md5: 4c60e751c769066ec857a54eff0a69ff
+    size: 468
+  - path: scripts/goodbooks/assemble_web_data.py
+    md5: b77f705b5caa6f3ed3989d4dd5cc7713
+    size: 2660
+  params:
+    params.yaml:
+      gb.common:
+        raw_dir: data/raw/goodbooks-10k
+        proc_dir: data/processed/gb
+  outs:
+  - path: data/processed/gb/web.csv
+    md5: d1046155b8db0d1eeaba884901c8fc7d
+    size: 2683364
+gb_recommendations:
+  cmd: python -m scripts.rs_recommend --domain gb
+  deps:
+  - path: models/gb.model
+    md5: 3cc79c490a6d67019d3d5077e85dd598
+    size: 48607323
+  - path: scripts/rs_recommend.py
+    md5: 829d10a37ec487fac39909018c08a6ca
+    size: 1698
+  params:
+    params.yaml:
+      gb.common:
+        raw_dir: data/raw/goodbooks-10k
+        proc_dir: data/processed/gb
+      models_dir: models
+  outs:
+  - path: data/processed/gb/recommendations.pickle
+    md5: b098d7a15fd612e98e6f6b93d2b0a4cd
+    size: 40127
+gb_web_index:
+  cmd: node scripts/indexer.js data/processed/gb
+  deps:
+  - path: data/processed/gb/web.csv
+    md5: d1046155b8db0d1eeaba884901c8fc7d
+    size: 2683364
+  - path: scripts/indexer.js
+    md5: 4d4359c4f2f7f04103c9d41759d49bb5
+    size: 740
+  outs:
+  - path: data/processed/gb/web_index.json
+    md5: 6ff21dfa114a6213c291974f1230cd4c
+    size: 2800912
+lf_unpack_raw:
+  cmd: tar xvzf lastfm-dataset-360K.tar.gz
+  deps:
+  - path: lastfm-dataset-360K.tar.gz
+    md5: 635e6ed3fc873aa4ba33aba0ebce02b1
+    size: 569202935
+  outs:
+  - path: lastfm-dataset-360K
+    md5: 6a0c85cdf0988870cfb49f7b15120b4d.dir
+ml_unpack_raw:
+  cmd: unzip ml-latest.zip
+  deps:
+  - path: ml-latest.zip
+    md5: 90ed04363d9554206faa113da1175238
+    size: 277113433
+  outs:
+  - path: ml-latest
+    md5: 6ffe813977fb6a0f763b048736291d1d.dir
+msd_download_raw:
+  cmd: ./download_msd.sh
+  deps:
+  - path: download_msd.sh
+    md5: 2baab7c1d0eacfd6ceeaabe65f175df7
+    size: 436
+  outs:
+  - path: artist_term.db
+    md5: 7c1cceb7b8420691077f10b8a05dec32
+  - path: sid_mismatches.txt
+    md5: 2c082a9cae76012e471649dc9c804913
+  - path: track_metadata.db
+    md5: 89705ce338a360ddcf7e527cd91f8328
+  - path: train_triplets.txt.zip
+    md5: fadbc813c11881b3147af3c26006335f
+  - path: unique_tracks.txt
+    md5: a02eb8275b10286d678309a19e229bd0
+msd_unpack_raw:
+  cmd: unzip train_triplets.txt.zip
+  deps:
+  - path: train_triplets.txt.zip
+    md5: fadbc813c11881b3147af3c26006335f
+    size: 512137572
+  outs:
+  - path: train_triplets.txt
+    md5: d0217d586f7b6a82d6a2611b922dc88d
+ml_zip:
+  cmd: (cd -- data/processed/ml && zip ml.zip web.csv web_index.json) && mv data/processed/ml/ml.zip
+    web/data
+  deps:
+  - path: data/processed/ml/web.csv
+    md5: 9da168e7c3feb8a2db76290271b10426
+    size: 3409587
+  - path: data/processed/ml/web_index.json
+    md5: 4e31e12d19fdee2f4d237d809e00cead
+    size: 3168734
+  outs:
+  - path: web/data/ml.zip
+    md5: e3fe7ec5718d4e583ebb6c457e3bfbb6
+    size: 2225273
+lf_zip:
+  cmd: (cd -- data/processed/lf && zip lf.zip web.csv web_index.json) && mv data/processed/lf/lf.zip
+    web/data
+  deps:
+  - path: data/processed/lf/web.csv
+    md5: a52797e55c6371dd4d13719e54b19324
+    size: 3261852
+  - path: data/processed/lf/web_index.json
+    md5: 3976926306be788e8b3890d26144ab53
+    size: 3765553
+  outs:
+  - path: web/data/lf.zip
+    md5: 9bf1b244dbf2afa751456b89e149ad8d
+    size: 2382819
+msd_zip:
+  cmd: (cd -- data/processed/msd && zip msd.zip web.csv web_index.json) && mv data/processed/msd/msd.zip
+    web/data
+  deps:
+  - path: data/processed/msd/web.csv
+    md5: efe5366679d5ae3fd2be84be75e4985a
+    size: 16684942
+  - path: data/processed/msd/web_index.json
+    md5: 995926bc5f271b586692e8c32d164cb3
+    size: 13850549
+  outs:
+  - path: web/data/msd.zip
+    md5: aae33f3fe51b21af29d0688ae868596c
+    size: 11010223
+gb_zip:
+  cmd: (cd -- data/processed/gb && zip gb.zip web.csv web_index.json) && mv data/processed/gb/gb.zip
+    web/data
+  deps:
+  - path: data/processed/gb/web.csv
+    md5: d1046155b8db0d1eeaba884901c8fc7d
+    size: 2683364
+  - path: data/processed/gb/web_index.json
+    md5: 6ff21dfa114a6213c291974f1230cd4c
+    size: 2800912
+  outs:
+  - path: web/data/gb.zip
+    md5: 801acef0f81924e2aa1732a24d76bc58
+    size: 1711260
+gb_model:
+  cmd: python -m scripts.train_rs --domain gb
+  deps:
+  - path: data/processed/gb/ds.csv
+    md5: f63289cc0a4fe5f33e2d2bb256d0118a
+    size: 23347013
+  - path: scripts/train_rs.py
+    md5: 4e9910289172f29c2d97235d6f14c2fd
+    size: 5001
+  params:
+    params.yaml:
+      gb.common:
+        raw_dir: data/raw/goodbooks-10k
+        proc_dir: data/processed/gb
+      gb.train_rs:
+        lr: 0.001
+        lr_milestones:
+        - 60
+        - 80
+        wd: 2e-05
+        epochs: 100
+        emb_size: 200
+        batch_size: 500
+        valid_users_pct: 0.1
+        valid_items_pct: 0.2
+      models_dir: models
+  outs:
+  - path: models/gb.model
+    md5: 3cc79c490a6d67019d3d5077e85dd598
+    size: 48607323
+  - path: models/gb_metrics.json
+    md5: 23e64902fe2d56353b335e5d40e0109d
+    size: 98
+lf_model:
+  cmd: python -m scripts.train_rs --domain lf
+  deps:
+  - path: data/processed/lf/ds.csv
+    md5: 382a398206f35cc438d91bc117905777
+    size: 128024195
+  - path: scripts/train_rs.py
+    md5: 4e9910289172f29c2d97235d6f14c2fd
+    size: 5001
+  params:
+    params.yaml:
+      lf.common:
+        raw_dir: data/raw/lf/lastfm-dataset-360K
+        proc_dir: data/processed/lf
+      lf.train_rs:
+        lr: 0.001
+        lr_milestones:
+        - 20
+        - 27
+        wd: 0.0003
+        epochs: 30
+        emb_size: 200
+        batch_size: 500
+        valid_users_pct: 0.1
+        valid_items_pct: 0.2
+  outs:
+  - path: models/lf.model
+    md5: 7c81094444f45798af19f833a966b269
+    size: 162418459
+  - path: models/lf_metrics.json
+    md5: 03c1b320dcfc7cf122a8a324277c8a43
+    size: 99
+ml_model:
+  cmd: python -m scripts.train_rs --domain ml
+  deps:
+  - path: data/processed/ml/ds.csv
+    md5: f831d3a9ccf599a6b9c3d8ad7c801052
+    size: 67482230
+  - path: scripts/train_rs.py
+    md5: 4e9910289172f29c2d97235d6f14c2fd
+    size: 5001
+  params:
+    params.yaml:
+      ml.common:
+        raw_dir: data/raw/ml/ml-latest
+        proc_dir: data/processed/ml
+      ml.train_rs:
+        lr: 0.001
+        lr_milestones:
+        - 60
+        - 80
+        wd: 2e-05
+        epochs: 100
+        emb_size: 200
+        batch_size: 500
+        valid_users_pct: 0.1
+        valid_items_pct: 0.2
+  outs:
+  - path: models/ml.model
+    md5: f6c8d22b3bb8cdd50e9e23f7f6e5ac48
+    size: 75896027
+  - path: models/ml_metrics.json
+    md5: cc1c4103c9946cb8c9814b2c1ab886a9
+    size: 100
+msd_model:
+  cmd: python -m scripts.train_rs --domain msd
+  deps:
+  - path: data/processed/msd/ds.csv
+    md5: 1408c6b64ef775055779c5bd8fb7d0da
+    size: 463221157
+  - path: scripts/train_rs.py
+    md5: 4e9910289172f29c2d97235d6f14c2fd
+    size: 5001
+  params:
+    params.yaml:
+      msd.common:
+        raw_dir: data/raw/msd
+        proc_dir: data/processed/msd
+      msd.train_rs:
+        lr: 0.001
+        lr_milestones:
+        - 60
+        - 80
+        wd: 2e-05
+        epochs: 100
+        emb_size: 500
+        batch_size: 500
+        valid_users_pct: 0.1
+        valid_items_pct: 0.2
+  outs:
+  - path: models/msd.model
+    md5: 925855be550eed35777bf471f944b46e
+    size: 1308481883
+  - path: models/msd_metrics.json
+    md5: b32e9a3b48ca2150426860d68eb323f9
+    size: 101
