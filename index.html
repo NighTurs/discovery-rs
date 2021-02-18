@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel='stylesheet' href='css/discovery-rs.css'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/three@0.125.0/build/three.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/minisearch@2.6.2/dist/umd/index.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/jszip@3.5.0/dist/jszip.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/jszip-utils@0.1.0/dist/jszip-utils.min.js'></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="Discovery Recommender System">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nighturs.github.io/discovery-rs/">
+    <meta property="og:image"
+        content="https://raw.githubusercontent.com/NighTurs/discovery-rs/gh-pages/discovery-rs.jpg">
+    <title>Discovery Recommender System</title>
+</head>
+
+<body>
+    <div id="sidepanel">
+        <a id="toolbar-toggle">
+            <div id="logo" class="flex-c flex-jc-sb flex-a-c no-select">
+                <span>Discovery-RS</span>
+                <span><i style="float: right;" class="fa fa-bars"></i></span>
+            </div>
+        </a>
+        <div id="toolbar" class="flex-c flex-v">
+            <fieldset>
+                <legend>Points</legend>
+                <div class="flex-a-c control">
+                    <span class="label">Dataset</span>
+                    <select id="dataset" autocomplete="off">
+                        <option value="lf" selected>Last.fm</option>
+                        <option value="ml">MovieLens</option>
+                        <option value="gb">GoodBooks</option>
+                        <option value="msd">MSD</option>
+                        <option value="upload">Upload</option>
+                    </select>
+                </div>
+                <div class="flex-c flex-v control">
+                    <div class="flex-a-c no-select">
+                        <span class="label">Size</span>
+                        <span id="points-size-value" class="value">3</span>
+                    </div>
+                    <input id="points-size" type="range" min="0.1" max="10" step="0.1" value="3" autocomplete="off">
+                </div>
+                <div class="flex-c flex-v control">
+                    <div class="flex-a-c no-select">
+                        <span class="label">Opacity</span>
+                        <span id="points-opacity-value" class="value">1</span>
+                    </div>
+                    <input id="points-opacity" type="range" min="0.05" max="1" step="0.05" value="1" autocomplete="off">
+                </div>
+
+            </fieldset>
+            <fieldset>
+                <legend>Color</legend>
+                <div class="flex-a-c control">
+                    <span class="label">Field</span>
+                    <select id="color-field">
+                    </select>
+                </div>
+                <div class="flex-c flex-v control">
+                    <div class="flex-a-c no-select">
+                        <span class="label">Balance</span>
+                        <span id="color-balance-value" class="value">0.5</span>
+                    </div>
+                    <input id="color-balance" type="range" min="0" max="1" step="0.001" value="0.5" autocomplete="off">
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Filter</legend>
+                <div class="flex-a-c control">
+                    <span class="label">Field</span>
+                    <select id="filter-field">
+                    </select>
+                </div>
+                <div class="flex-c flex-v control">
+                    <div class="flex-a-c no-select">
+                        <span class="label">Min Value</span>
+                        <span id="filter-value" class="value">0</span>
+                    </div>
+                    <input id="filter" type="range" min="0" max="1" step="0.001" value="0" autocomplete="off">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Search</legend>
+                <div class="flex-a-c control">
+                    <span class="label no-select">Field</span>
+                    <select id="search-field">
+                    </select>
+                </div>
+                <input class="control" id="search" type="text" autocomplete="off">
+                <div class="flex-a-c control">
+                    <input id="search-hide-others" type="checkbox" autocomplete="off">
+                    <label for="search-hide-others">Hide others</label>
+                </div>
+                <div class="flex-a-c control">
+                    <input id="search-color-findings" type="checkbox" autocomplete="off">
+                    <label for="search-color-findings">Color findings</label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Flag</legend>
+                <div class="control">
+                    <span class="label">Name</span>
+                    <input id="flag-name" type="text" list="flag-name-datalist" placeholder="Double-click to apply"
+                        autocomplete="off">
+                    <datalist id="flag-name-datalist">
+                    </datalist>
+                </div>
+                <div class="control">
+                    <span class="label">Recommender Server</span>
+                    <input id="rec-server" type="url" value="http://localhost:5501" autocomplete="off">
+                </div>
+                <div class="control flex-c">
+                    <input id="rec-button" type="button" value="Send Flag" disabled="true" autocomplete="off">
+                    <span id="rec-status" />
+                </div>
+            </fieldset>
+        </div>
+    </div>
+    <div id="tooltip">
+        <div id="tooltip-title"></div>
+        <div id="tooltip-rows"></div>
+    </div>
+    <input id="dataset-upload-button" type="file" value="Upload" accept=".zip">
+    <div id="loader-outer">
+        <div id="loader"></div>
+    </div>
+    <script src='js/discovery-rs.js'></script>
+</body>
+
+</html>
