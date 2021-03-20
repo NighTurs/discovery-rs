@@ -6,7 +6,7 @@ Flask-Cors==3.0.8
 future==0.18.2
 glog==0.3.1
 itsdangerous==1.1.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 MarkupSafe==1.1.1
 numpy==1.19.0
 Pillow==7.1.2
