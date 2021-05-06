@@ -2,7 +2,7 @@
 annoy==1.16.3
 click==7.1.2
 Flask==1.1.2
-Flask-Cors==3.0.8
+Flask-Cors==3.0.9
 future==0.18.2
 glog==0.3.1
 itsdangerous==1.1.0
