@@ -65,5 +65,5 @@ Then run:
 ./docker_shell.sh
 
 cd web/data
-dvc repro lf.zip.dvc gb.zip.dvc ml.zip.dvc msd.zip.dvc
+dvc repro lf_zip gb_zip ml_zip msd_zip
 ```
